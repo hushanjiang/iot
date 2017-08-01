@@ -1,0 +1,9 @@
+SCC = This is a Source Code Control file
+
+[common.mak]
+SCC_Aux_Path = "\\172.16.1.148\data\"
+SCC_Project_Name = "$/应用区/SDK产品与服务/Client/SDK 4/SDK4.3.0/SDK4.3.0_patch-1-2012-07-18/TMP", ENWMAAAA
+
+[config.mak]
+SCC_Aux_Path = "\\172.16.1.148\data\"
+SCC_Project_Name = "$/应用区/SDK产品与服务/Client/SDK 4/SDK4.3.0/SDK4.3.0_patch-1-2012-07-18/TMP", ENWMAAAA
