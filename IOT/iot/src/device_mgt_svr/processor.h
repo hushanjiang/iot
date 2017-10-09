@@ -41,6 +41,10 @@ private:
 	virtual int do_init(void *args);
 	
 	int _get_uuid(const std::string &msg_tag, std::string &err_info, unsigned long long &uuid);
+
+	std::string _get_errInfo(const int error_code);
+
+	std::map<int, std::string> _err_msg;
 };
 
 #endif

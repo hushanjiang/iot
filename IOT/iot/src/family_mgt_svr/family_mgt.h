@@ -68,6 +68,9 @@ typedef struct _StFamilyInfo
 	uint64 routerId;
 	std::string familyName;
 	std::string familyAvatar;
+	_StFamilyInfo():familyId(0),ownerId(0),createdAt(0),updateAt(0),routerId(0),familyName(""),familyAvatar("")
+	{
+	}
 }StFamilyInfo;
 
 typedef struct _StMemberApplyInfo
@@ -98,10 +101,10 @@ struct TokenInfo {
 	unsigned long long expire_time;
 	std::string from;
 	std::string salt;
-	std::string pwd;//Ô­ÃÜÂë¾­¹ý¿Í»§¶Ëmd5ºóµÄ×Ö·û´®
-	std::string nonce;//Ëæ»ú´®
-	TokenType token_type;//tokenÀàÐÍ
-	std::string sig;//Ç©Ãûhmac_sha1Ëã·¨
+	std::string pwd;//Ô­ï¿½ï¿½ï¿½ë¾­ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½md5ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+	std::string nonce;//ï¿½ï¿½ï¿½ï¿½ï¿½
+	TokenType token_type;//tokenï¿½ï¿½ï¿½ï¿½
+	std::string sig;//Ç©ï¿½ï¿½hmac_sha1ï¿½ã·¨
 };
 
 
@@ -113,77 +116,69 @@ public:
 	~Family_Mgt();
 
 public:
-	int create_family(const uint64 &userId, const std::string &msg_tag, const StFamilyInfo &info, std::string &token);
+	int create_family(const uint64 &userId, const std::string &msg_tag, const StFamilyInfo &info, std::string &token, std::string &errInfo);
 
 	/* "params":{"user_id":123, "family_id":123, "family_name":"", "family_avatar":"" } */
-	int update_family(const uint64 &userId, const std::string &msg_tag, const StFamilyInfo &info);
+	int update_family(const uint64 &userId, const std::string &msg_tag, const StFamilyInfo &info, std::string &errInfo);
 
-	int member_switch_family(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId);
+	int member_switch_family(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::string &errInfo);
 
-	int get_family_info(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, StFamilyInfo &result);
+	int get_family_info(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, StFamilyInfo &result, std::string &errInfo);
 
-	int get_family_list(const uint64 &userId, const std::string &msg_tag, std::vector<StFamilyInfo> &result);
+	int get_family_list(const uint64 &userId, const std::string &msg_tag, std::vector<StFamilyInfo> &result, std::string &errInfo);
 
-	int bind_router(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, uint64 &routerId, const std::string &uuid, const std::string &pwd);
+	int bind_router(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, uint64 &routerId, const std::string &uuid, const std::string &pwd, std::string &errInfo);
 	
-	int unbind_router(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId);
+	int unbind_router(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::string &errInfo);
 
-	int get_apply_code(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::string &code, uint64 &timestamp);
+	int get_apply_code(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::string &code, uint64 &timestamp, std::string &errInfo);
 
-	int create_member(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const std::string &code, std::string &token);
+	int create_member(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const std::string &code, std::string &token, std::string &errInfo);
 
-	int get_invitation(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::string &token);
+	int get_invitation(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::string &token, std::string &errInfo);
 	
-	int member_apply_join(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId);
+	int remove_member(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 &memberId, std::string &errInfo);
 	
-	int accept_member_join(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 &applyId, enum member_join_apply_result applyResult);
-	
-	int get_family_apply_number(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, unsigned int &count);
+	int update_member(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 &memberId, const std::string &memberName, std::string &errInfo);
 
-	int get_family_apply_list(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::vector<StMemberApplyInfo> &result);
+	int get_member_info(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 memberId, StFamilyMemberInfo &result, std::string &errInfo);
 
-	int remove_member(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 &memberId);
-	
-	int update_member(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 &memberId, const std::string &memberName);
+	int get_member_info_list(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::vector<StFamilyMemberInfo> &result, std::string &errInfo);
 
-	int get_member_info(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, const uint64 memberId, StFamilyMemberInfo &result);
-
-	int get_member_info_list(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::vector<StFamilyMemberInfo> &result);
-
-	int get_member_id_list(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::vector<uint64> &result, uint64 &routerId);
+	int get_member_id_list(const uint64 &userId, const std::string &msg_tag, const uint64 &familyId, std::vector<uint64> &result, uint64 &routerId, std::string &errInfo);
 	
 	int check_talk_condition(const uint64 srcId, const uint64 targetId, const std::string &msg_tag, enum talk_msg_type type, std::string &errInfo);
 
 private:
-	bool _is_user_joined_family(const uint64 userId, const uint64 familyId);	
-	int _get_router_id_by_family(const uint64 familyId, uint64 &routerId);
-	int _get_members_by_family(const uint64 familyId, std::vector<uint64> &members, uint64 &ownerId);
-	int _get_family_ids_by_user(const uint64 userId, std::vector<uint64> &familyIds);
-	int _muti_get_family_info(const std::vector<uint64> &familyIds, std::vector<StFamilyInfo> &result);
+	bool _is_user_joined_family(const uint64 userId, const uint64 familyId);
+	int _get_familyInfo_by_id(const uint64 familyId, StFamilyInfo &info, std::string &errInfo);
+	int _match_invite_code(const uint64 familyId, const std::string &code, std::string &errInfo);
+	int _get_family_id_by_router(const uint64 routerId, uint64 &familyId, std::string &errInfo);
+	int _get_members_by_family(const uint64 familyId, std::vector<uint64> &members, uint64 &ownerId, std::string &errInfo);
+	int _get_family_ids_by_user(const uint64 userId, std::vector<uint64> &familyIds, std::string &errInfo);
+	int _muti_get_family_info(const std::vector<uint64> &familyIds, std::vector<StFamilyInfo> &result, std::string &errInfo);
 	
-	int _get_FamilyInfo_from_Redis(const uint64 &familyId, StFamilyInfo &result);
+	/*int _get_FamilyInfo_from_Redis(const uint64 &familyId, StFamilyInfo &result);
 	int _set_FamilyInfo_to_Redis(const StFamilyInfo &info);
-	int _update_FamilyInfo_to_Redis(const StFamilyInfo &info);
 	int _remove_FamilyInfo_from_Redis(const uint64 &familyId);
-	int _set_user_joined_family_list_to_Redis(const uint64 &userId, const std::vector<uint64> &familyInfos);
-	int _set_user_joined_new_family_to_Redis(const uint64 &userId, const uint64 &familyId);
-	int _set_user_quit_family_to_Redis(const uint64 &userId, const uint64 &familyId);
-	int _set_family_all_user_list_to_Redis(const uint64 &familyId, const std::vector<uint64> &userIds, const uint64 ownerId);
-	int _set_family_add_new_member_to_Redis(const uint64 &familyId, const uint64 &userId);
-	int _set_family_remove_member_to_Redis(const uint64 &userId, const uint64 &familyId);
 	int _get_user_joined_family_list_from_Redis(const uint64 &userId, std::vector<uint64> &familyIds);
-	int _get_family_all_user_list_from_Redis(const uint64 &familyId, std::vector<uint64> &userIds, uint64 &ownerId);
+	int _set_user_joined_family_list_to_Redis(const uint64 &userId, const std::vector<uint64> &familyInfos);
+	int _remove_user_joined_family_from_Redis(const uint64 &userId);
+ 	int _get_family_all_user_list_from_Redis(const uint64 &familyId, std::vector<uint64> &userIds, uint64 &ownerId);
+	int _set_family_all_user_list_to_Redis(const uint64 &familyId, const std::vector<uint64> &userIds, const uint64 ownerId);
+	int _remove_family_all_user_list_from_Redis(const uint64 &familyId);*/
 	
-	int _get_FamilyInfo_from_sql(const uint64 &familyId, StFamilyInfo &result);
-	int _set_FamilyInfo_to_sql(const StFamilyInfo &info);
-	int _update_FamilyInfo_to_sql(const StFamilyInfo &info);
-	int _get_user_joined_family_list_from_sql(const uint64 &userId, std::vector<uint64> &familyIds);
-	int _get_family_all_user_list_from_sql(const uint64 &familyId, std::vector<uint64> &userIds, uint64 &ownerId);
+	int _get_FamilyInfo_from_sql(const uint64 &familyId, StFamilyInfo &result, std::string &errInfo);
+	int _set_FamilyInfo_to_sql(const StFamilyInfo &info, std::string &errInfo);
+	int _update_FamilyInfo_to_sql(const StFamilyInfo &info, std::string &errInfo);
+	int _get_user_joined_family_list_from_sql(const uint64 &userId, std::vector<uint64> &familyIds, std::string &errInfo);
+	int _get_family_all_user_list_from_sql(const uint64 &familyId, std::vector<uint64> &userIds, uint64 &ownerId, std::string &errInfo);
 
-	int _push_msg(const std::string &method, const std::string &msg_tag, const uint64 userId, const uint64 familyId, const uint64 operatorId);
+	int _push_msg(const std::string &method, const std::string &msg_tag, const uint64 userId, const uint64 familyId, const uint64 operatorId, std::string &errInfo);
 	std::string _rand_str(const unsigned int length);
+	std::string _int_to_string(const uint64 number);
 	int _generate_token(const std::string &key, TokenInfo &token_info, std::string &token, std::string &err_info);
-	int _get_sig_token(const std::string &key, const TokenInfo &token_info, std::string &sig);
+	int _get_sig_token(const std::string &key, const TokenInfo &token_info, std::string &sig, std::string &errInfo);
 };
 
 #define PSGT_Family_Mgt Singleton_T<Family_Mgt>::getInstance()

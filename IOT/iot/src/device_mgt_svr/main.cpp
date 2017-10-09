@@ -8,20 +8,21 @@
 #include "base/base_utility.h"
 
 #include "admin.h"
+#include "mongo_mgt.h"
 #include "conf_mgt.h"
 #include "processor.h"
 #include "req_tcp_event_handler.h"
 
 USING_NS_BASE;
 
-Logger g_logger;         //ÄÚ²¿ÈÕÖ¾´òÓ¡Æ÷
+Logger g_logger;         //å†…éƒ¨æ—¥å¿—æ‰“å°å™¨
 StSysInfo g_sysInfo;
 
 void usage()
 {
     fprintf(stderr, 
-        "Usage: ./device_mgt_svr.bin -s cfg\n\n"
-        "  -s  Device_Mgt_Svr_cfg\n\n"
+        "Usage: ./family_mgt_svr.bin -s cfg\n\n"
+        "  -s  Family_Mgt_Svr_cfg\n\n"
         "  build time: %s %s\n"
         "  Bug reports, feedback, etc, to: 89617663@qq.com\n"
         "\n",
@@ -45,11 +46,11 @@ int main(int argc, char * argv[])
     }
 
 
-	//ÉèÖÃËæ»úÊıÖÖ×Ó
+	//è®¾ç½®éšæœºæ•°ç§å­
 	set_random_seed();
 	
 	
-	//(2) ĞÅºÅÆÁ±Î
+	//(2) ä¿¡å·å±è”½
 	sigset_t sigset;
 	add_signal_in_set(sigset, 3, SIGPIPE, SIGUSR2, SIGTERM);
 	nRet = block_process_signal(sigset);
@@ -59,7 +60,7 @@ int main(int argc, char * argv[])
 		return 0;
 	}
 
-	//(3) ½âÎö³ÌĞòÔËĞĞ²ÎÊı
+	//(3) è§£æç¨‹åºè¿è¡Œå‚æ•°
 	printf("--- prepare to start parse arg ---\n");
 	Args_Parser args_parser;
 	args_parser.parse_args(argc, argv);
@@ -74,7 +75,7 @@ int main(int argc, char * argv[])
 	printf("=== complete to start parse arg ===\n");
 
 
-	//(4) ³õÊ¼»¯ÅäÖÃÄ£¿é
+	//(4) åˆå§‹åŒ–é…ç½®æ¨¡å—
 	printf("--- prepare to init conf mgt ---\n");
 	nRet = PSGT_Conf_Mgt->init(std::string("../conf/")+cfg);
 	if(nRet != 0)
@@ -86,7 +87,7 @@ int main(int argc, char * argv[])
 	printf("===== complete to init conf mgt =====\n");
 
 
-	//ÉèÖÃTZ
+	//è®¾ç½®TZ
 	if(g_sysInfo._TZ != "")
 	{
 		char tz[100] = {0};
@@ -106,7 +107,7 @@ int main(int argc, char * argv[])
 	printf("date:%s\n", FormatDateTimeStr().c_str());
 	
 
-	//(5) ³õÊ¼»¯logger
+	//(5) åˆå§‹åŒ–logger
 	nRet = g_logger.init("./../log/", g_sysInfo._new_id, MAX_LOG_SIZE, 3600);
 	if(nRet != 0)
 	{
@@ -118,11 +119,11 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "=============================================\n");
 	XCP_LOGGER_INFO(&g_logger, "        date:%s\n", FormatDateTimeStr().c_str());
 	XCP_LOGGER_INFO(&g_logger, "        process:%d, thread:%llu \n", get_pid(), get_thread_id());
-	XCP_LOGGER_INFO(&g_logger, "        prepare to start Device Mgt Svr! ...\n");
+	XCP_LOGGER_INFO(&g_logger, "        prepare to start Family Mgt Svr! ...\n");
 	XCP_LOGGER_INFO(&g_logger, "=============================================\n");
 
 
-	//(7) Æô¶¯¹¤×÷Ïß³Ì³Ø
+	//(7) å¯åŠ¨å·¥ä½œçº¿ç¨‹æ± 
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start processor ---\n");
 	Processor processor;
 	nRet = processor.init(NULL, g_sysInfo._thr_num);
@@ -141,7 +142,7 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start processor ===\n");
 	
 
-	//(8) Æô¶¯req tcp reactor
+	//(8) å¯åŠ¨req tcp reactor
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start req reactor(tcp) ---\n");
 	Req_TCP_Event_Handler *req_handler = new Req_TCP_Event_Handler;
 	StReactorAgrs args_req;
@@ -163,7 +164,7 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start req reactor(tcp) ===\n");
 
 
-	//(9) Æô¶¯Admin  --- Ö÷¶¯Ë¢ĞÂÅäÖÃ
+	//(9) å¯åŠ¨Admin  --- ä¸»åŠ¨åˆ·æ–°é…ç½®
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start Admin ---\n");
 	Admin admin;
 	nRet = admin.init(NULL);
@@ -181,9 +182,8 @@ int main(int argc, char * argv[])
 	}
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start Admin ===\n");
 
-
-	//(10) Íê³ÉDevice Mgt Svr  µÄÆô¶¯
-	XCP_LOGGER_INFO(&g_logger, "===== complete to start Device Mgt Svr! =====\n");
+	//(10) å®ŒæˆFamily Mgt Svr  çš„å¯åŠ¨
+	XCP_LOGGER_INFO(&g_logger, "===== complete to start Family Mgt Svr! =====\n");
 	
 	while(true)
 	{

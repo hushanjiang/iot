@@ -33,9 +33,12 @@ USING_NS_BASE;
 class XProtocol
 {
 public:
-	static int req_head(const std::string &req, std::string &method, unsigned long long &timestamp, unsigned int &req_id, unsigned long long &real_id, std::string &msg_tag, std::string &err_info);
+	static int req_head(const std::string &req, std::string &method, unsigned long long &timestamp, 
+		unsigned int &req_id, unsigned long long &real_id, std::string &msg_tag, std::string &msg_encry, 
+		std::string &msg_uuid, std::string &session_id,	std::string &err_info);
 
 	static std::string rsp_msg(const std::string &method, const unsigned int req_id, const std::string &msg_tag,  
+		const std::string &msg_encry, const std::string &msg_uuid, const std::string &session_id,
 		const int code, const std::string &msg, const std::string &body="", bool is_object = false);
 
 	static int admin_head(const std::string &req, std::string &method, unsigned long long &timestamp, unsigned long long &realId, std::string &msg_tag, int &code, std::string &msg, std::string &err_info);
@@ -61,11 +64,11 @@ public:
 	static std::string get_push_req(const std::string &msg_tag, const std::string &method, const uint64 userId, const uint64 familyId, const uint64 operatorId);
 
 	// param
-	static int get_special_params(const std::string &req, const std::string &paramName, std::string &result);
+	static int get_special_params(const std::string &req, const std::string &paramName, std::string &result, std::string &err_info);
 	
-	static int get_special_params(const std::string &req, const std::string &paramName, unsigned int &result);
+	static int get_special_params(const std::string &req, const std::string &paramName, unsigned int &result, std::string &err_info);
 	
-	static int get_special_params(const std::string &req, const std::string &paramName, unsigned long long &result);
+	static int get_special_params(const std::string &req, const std::string &paramName, unsigned long long &result, std::string &err_info);
 
 	static std::string add_family_result(const unsigned long long familyId, const std::string &token);
 	

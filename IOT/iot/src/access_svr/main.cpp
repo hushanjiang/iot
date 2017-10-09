@@ -12,21 +12,28 @@
 #include "admin.h"
 #include "conf_mgt.h"
 #include "req_mgt.h"
+#include "rsp_mgt.h"
 
 #include "req_processor.h"
+#include "rsp_processor.h"
 #include "msg_processor.h"
 #include "req_tcp_event_handler.h"
 #include "session_timer_handler.h"
+#include "route_release.h"
+#include "broadcast_processor.h"
 
 
 USING_NS_BASE;
 
-Logger g_logger; //ÄÚ²¿ÈÕÖ¾´òÓ¡Æ÷
+Logger g_logger; //å†…éƒ¨æ—¥å¿—æ‰“å°å™¨
 StSysInfo g_sysInfo;
 
 Reactor *g_reactor_req = NULL;
-Req_Mgt *g_req_mgt = NULL;
-Req_Mgt *g_msg_mgt = NULL;
+Req_Mgt *g_req_mgt = NULL;   //å®¢æˆ·ç«¯è¯·æ±‚å¤„ç†é˜Ÿåˆ—
+Rsp_Mgt *g_syn_mgt = NULL;   //ä¸šåŠ¡æœåŠ¡åŒæ­¥å“åº”å¤„ç†é˜Ÿåˆ—
+Req_Mgt *g_asyn_mgt = NULL;  //ä¸šåŠ¡æœåŠ¡å¼‚æ­¥å“åº”å¤„ç†é˜Ÿé‡Œ
+Req_Mgt *g_msg_mgt = NULL;   //MDPé€šé“æ¶ˆæ¯å¤„ç†é˜Ÿé‡Œ
+Req_Mgt *g_broadcast_mgt = NULL;
 
 void usage()
 {
@@ -54,12 +61,10 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-
-	//ÉèÖÃËæ»úÊıÖÖ×Ó
+	//è®¾ç½®éšæœºæ•°ç§å­
 	set_random_seed();
 	
-	
-	//(2) ĞÅºÅÆÁ±Î
+	//(2) ä¿¡å·å±è”½
 	sigset_t sigset;
 	add_signal_in_set(sigset, 2, SIGPIPE, SIGUSR2);
 	nRet = block_process_signal(sigset);
@@ -69,7 +74,7 @@ int main(int argc, char * argv[])
 		return 0;
 	}
 
-	//(3) ½âÎö³ÌĞòÔËĞĞ²ÎÊı
+	//(3) è§£æç¨‹åºè¿è¡Œå‚æ•°
 	printf("--- prepare to start parse arg ---\n");
 	Args_Parser args_parser;
 	args_parser.parse_args(argc, argv);
@@ -83,8 +88,7 @@ int main(int argc, char * argv[])
 	}	
 	printf("=== complete to start parse arg ===\n");
 
-
-	//(4) ³õÊ¼»¯ÅäÖÃÄ£¿é
+	//(4) åˆå§‹åŒ–é…ç½®æ¨¡å—
 	printf("--- prepare to init conf mgt ---\n");
 	nRet = PSGT_Conf_Mgt->init(std::string("../conf/")+cfg);
 	if(nRet != 0)
@@ -96,16 +100,15 @@ int main(int argc, char * argv[])
 	g_sysInfo = PSGT_Conf_Mgt->get_sysinfo();
 	printf("===== complete to init conf mgt =====\n");
 
-	//(5)Éú³Épid file
-	nRet = pid_file(g_sysInfo._new_id + std::string(".pid"));
+	//(5)ç”Ÿæˆpid file
+	nRet = pid_file(g_sysInfo._log_id + std::string(".pid"));
 	if(nRet != 0)
 	{
 		printf("pid file failed, ret:%d\n", nRet);
 		return nRet;
 	}
 
-
-	//ÉèÖÃTZ
+	//è®¾ç½®TZ
 	if(g_sysInfo._TZ != "")
 	{
 		char tz[100] = {0};
@@ -124,9 +127,8 @@ int main(int argc, char * argv[])
 	tzset();
 	printf("date:%s\n", FormatDateTimeStr().c_str());	
 
-
-	//(5) ³õÊ¼»¯logger
-	nRet = g_logger.init("./../log/", g_sysInfo._new_id, MAX_LOG_SIZE, 3600);
+	//(6) åˆå§‹åŒ–logger
+	nRet = g_logger.init("./../log/", g_sysInfo._log_id, MAX_LOG_SIZE, 3600);
 	if(nRet != 0)
 	{
 		printf("init debug logger failed, ret:%d\n", nRet);
@@ -139,8 +141,7 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "        prepare to start Access Svr! ...\n");
 	XCP_LOGGER_INFO(&g_logger, "=============================================\n");
 
-
-	//(6) Æô¶¯Req ¹¤×÷Ïß³Ì³Ø
+	//(7) å¯åŠ¨Req å·¥ä½œçº¿ç¨‹æ± 
 	g_req_mgt = new Req_Mgt;
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start req processor ---\n");
 	Req_Processor req_processor;
@@ -158,29 +159,30 @@ int main(int argc, char * argv[])
 		return nRet;
 	}
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start req processor ===\n");
-	
 
-	//(7) Æô¶¯Msg ¹¤×÷Ïß³Ì³Ø
-	g_msg_mgt = new Req_Mgt;
-	XCP_LOGGER_INFO(&g_logger, "--- prepare to start msg processor ---\n");
-	Msg_Processor msg_processor;
-	nRet = msg_processor.init(NULL, g_sysInfo._thr_num);
+
+	//(8) å¯åŠ¨Rspå·¥ä½œçº¿ç¨‹æ± 
+	g_syn_mgt = new Rsp_Mgt;
+	g_asyn_mgt = new Req_Mgt;
+	XCP_LOGGER_INFO(&g_logger, "--- prepare to start rsp processor ---\n");
+	Rsp_Processor rsp_processor;
+	nRet = rsp_processor.init(NULL, g_sysInfo._thr_num);
 	if(nRet != 0)
 	{
-		printf("init msg processor failed, ret:%d\n", nRet);
+		printf("init rsp processor failed, ret:%d\n", nRet);
 		return nRet;
 	}
 		
-	nRet = msg_processor.run();
+	nRet = rsp_processor.run();
 	if(nRet != 0)
 	{
-		printf("run msg processor failed, ret:%d\n", nRet);
+		printf("run rsp processor failed, ret:%d\n", nRet);
 		return nRet;
 	}
-	XCP_LOGGER_INFO(&g_logger, "=== complete to start msg processor ===\n");
+	XCP_LOGGER_INFO(&g_logger, "=== complete to start rsp processor ===\n");
 
 
-	//(8) Æô¶¯req tcp reactor
+	//(9) å¯åŠ¨req tcp reactor
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start req reactor(tcp) ---\n");
 	Req_TCP_Event_Handler *req_handler = new Req_TCP_Event_Handler;
 	StReactorAgrs args_req;
@@ -202,7 +204,66 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start req reactor(tcp) ===\n");
 
 
-	//(9) Æô¶¯Admin  --- Ö÷¶¯Ë¢ĞÂÅäÖÃ
+	//(10) å¯åŠ¨Msg å·¥ä½œçº¿ç¨‹æ± 
+	g_msg_mgt = new Req_Mgt;
+	XCP_LOGGER_INFO(&g_logger, "--- prepare to start msg processor ---\n");
+	Msg_Processor msg_processor;
+	nRet = msg_processor.init(NULL, g_sysInfo._thr_num);
+	if(nRet != 0)
+	{
+		printf("init msg processor failed, ret:%d\n", nRet);
+		return nRet;
+	}
+		
+	nRet = msg_processor.run();
+	if(nRet != 0)
+	{
+		printf("run msg processor failed, ret:%d\n", nRet);
+		return nRet;
+	}
+	XCP_LOGGER_INFO(&g_logger, "=== complete to start msg processor ===\n");
+
+
+	//(11) å¯åŠ¨Broadcast å·¥ä½œçº¿ç¨‹æ± 
+	g_broadcast_mgt = new Req_Mgt;
+	XCP_LOGGER_INFO(&g_logger, "--- prepare to start broacast processor ---\n");
+	Broadcast_Processor broacast_processor;
+	nRet = broacast_processor.init(NULL, g_sysInfo._thr_num);
+	if(nRet != 0)
+	{
+		printf("init broacast processor failed, ret:%d\n", nRet);
+		return nRet;
+	}
+		
+	nRet = broacast_processor.run();
+	if(nRet != 0)
+	{
+		printf("run broacast processor failed, ret:%d\n", nRet);
+		return nRet;
+	}
+	XCP_LOGGER_INFO(&g_logger, "=== complete to start broacast processor ===\n");
+
+
+	//(12) å¯åŠ¨Route_Release
+	XCP_LOGGER_INFO(&g_logger, "--- prepare to start Route_Release ---\n");
+	Route_Release *route_release = new Route_Release;
+	nRet = route_release->init(NULL);
+	if(nRet != 0)
+	{
+		printf("Route_Release init failed, ret:%d\n", nRet);
+		return nRet;
+	}
+		
+	nRet = route_release->run();
+	if(nRet != 0)
+	{
+		printf("Route_Release run failed, ret:%d\n", nRet);
+		return nRet;
+	}
+	XCP_LOGGER_INFO(&g_logger, "=== complete to start Route_Release ===\n");
+
+
+	//(13) å¯åŠ¨Admin  --- ä¸»åŠ¨åˆ·æ–°é…ç½®
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start Admin ---\n");
 	Admin admin;
 	nRet = admin.init(NULL);
@@ -221,7 +282,7 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start Admin ===\n");
 
 
-	//(10)Æô¶¯session timer  --- 10·ÖÖÓ¼ì²éÒ»´Î£¬1·ÖÖÓ¸ÃÁ´½ÓÃ»ÓĞÊı¾İ´¦Àí¾Í¹Ø±Õ¸ÃÁ´½Ó
+	//(13)å¯åŠ¨session timer  --- 10åˆ†é’Ÿæ£€æŸ¥ä¸€æ¬¡ï¼Œ1åˆ†é’Ÿè¯¥é“¾æ¥æ²¡æœ‰æ•°æ®å¤„ç†å°±å…³é—­è¯¥é“¾æ¥
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start session timer ---\n");
 	Select_Timer *timer_session = new Select_Timer;
 	Session_Timer_handler *session_thandler = new Session_Timer_handler;
@@ -248,7 +309,7 @@ int main(int argc, char * argv[])
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start session timer ===\n");
 
 	
-	//(11) Íê³Éaccess svr  µÄÆô¶¯
+	//(11) å®Œæˆaccess svr  çš„å¯åŠ¨
 	XCP_LOGGER_INFO(&g_logger, "===== complete to start Access Svr! =====\n");
 	
 	while(true)

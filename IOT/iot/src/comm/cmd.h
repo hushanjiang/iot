@@ -22,129 +22,138 @@
 #define _CMD_H
 
 
-//¹«¹²
-const std::string CMD_HB = "hb";                                                                        //ĞÄÌø
-const std::string CMD_REGISTER = "register";                                                            //×¢²á·şÎñ
-const std::string CMD_UNREGISTER = "unregister";                                                        //×¢Ïú·şÎñ
+//å…¬å…±
+const std::string CMD_HB = "hb";                                                                        //å¿ƒè·³
+const std::string CMD_REGISTER = "register";                                                            //æ³¨å†ŒæœåŠ¡
+const std::string CMD_UNREGISTER = "unregister";                                                        //æ³¨é”€æœåŠ¡
 
 
-//¸ºÔØ¾ùºâ
-const std::string CMD_LB = "lb";                                                                        //¸ºÔØ¾ùºâ
+//è´Ÿè½½å‡è¡¡
+const std::string CMD_LB = "lb";                                                                        //è´Ÿè½½å‡è¡¡
 
 
-//ÅäÖÃ·şÎñ
-const std::string CMD_GET_SERVER_ACCESS = "get_server_access";                                          //»ñÈ¡·şÎñÆ÷·ÃÎÊĞÅÏ¢
-const std::string CMD_GET_USER_RIGHT = "get_user_right";                                                //»ñÈ¡ÓÃ»§È¨ÏŞÁĞ±í
-const std::string CMD_GET_SYS_CONFIG = "get_sys_config";                                                //»ñÈ¡ÏµÍ³ÅäÖÃ
+//é…ç½®æœåŠ¡
+const std::string CMD_GET_SERVER_ACCESS = "get_server_access";                                          //è·å–æœåŠ¡å™¨è®¿é—®ä¿¡æ¯
+const std::string CMD_GET_USER_RIGHT = "get_user_right";                                                //è·å–ç”¨æˆ·æƒé™åˆ—è¡¨
+const std::string CMD_GET_SYS_CONFIG = "get_sys_config";                                                //è·å–ç³»ç»Ÿé…ç½®
 
 
-//ID ·şÎñÆ÷
-const std::string CMD_GET_UUID = "get_uuid";                                                            //»ñÈ¡UUID
+//æ¥å…¥æœåŠ¡å™¨
+const std::string CMD_LOGOUT = "acc_logout";                                                             //é€€å‡ºå®¢æˆ·ç«¯(appå’Œrouter)
+const std::string CMD_CHECK_CLIENT_ONLINE = "acc_check_client_online";                                   //åˆ¤æ–­å®¢æˆ·ç«¯æ˜¯å¦åœ¨çº¿
 
 
-//Key ·şÎñÆ÷
-const std::string CMD_CREATE_SECURITY_CHANNEL = "create_security_channel";                              //´´½¨°²È«Í¨µÀ
+//ID æœåŠ¡å™¨
+const std::string CMD_GET_UUID = "get_uuid";                                                            //è·å–UUID
 
 
-//ÓÃ»§¹ÜÀí
-const std::string CMD_REGISTER_USER = "um_register_user";                                               //×¢²áÓÃ»§
-const std::string CMD_LOGIN_PWD = "um_login_pwd";                                                       //µÇÂ¼(ÃÜÂë)
-const std::string CMD_LOGIN_CODE = "um_login_code";                                                     //µÇÂ¼(ÊÖ»úÑéÖ¤Âë)
-const std::string CMD_AUTH = "um_auth";                                                                 //ÑéÖ¤        
-const std::string CMD_GET_PHONE_CODE = "um_get_phone_code";                                             //»ñÈ¡ÊÖ»úÑéÖ¤Âë
-const std::string CMD_CHECK_PHONE_CODE = "um_check_phone_code";                                         //¼ì²éÊÖ»úÑéÖ¤Âë
-const std::string CMD_SET_PWD = "um_set_pwd";                                                           //ÉèÖÃÃÜÂë
-const std::string CMD_RESET_PWD = "um_reset_pwd";                                                       //Í¨¹ıÊÖ»úÑéÖ¤ÂëÖØĞÂÉèÖÃÃÜÂë
-const std::string CMD_GET_USER_PROFILE = "um_get_user_profile";                                         //»ñÈ¡ÓÃ»§ĞÅÏ¢
-const std::string CMD_UPDATE_USER_PROFILE = "um_update_user_profile";                                   //¸üĞÂÓÃ»§ĞÅÏ¢
-const std::string CMD_GET_USER_ACCOUNT = "um_get_user_account";                                         //»ñÈ¡ÓÃ»§ÕË»§ĞÅÏ¢
-const std::string CMD_LOGOUT = "um_logout";                                                             //ÍË³ö¿Í»§¶Ë
+//Key æœåŠ¡å™¨
+const std::string CMD_CREATE_SECURITY_CHANNEL = "create_security_channel";                              //åˆ›å»ºå®‰å…¨é€šé“
 
 
-//¼ÒÍ¥¹ÜÀí
-const std::string CMD_CREATE_FAMILY = "fm_create_family";                                               //´´½¨¼ÒÍ¥
-const std::string CMD_UPDATE_FAMILY = "fm_update_family";                                               //¸üĞÂ¼ÒÍ¥ĞÅÏ¢
-const std::string CMD_SWITCH_FAMILY = "fm_switch_family";                                               //ÇĞ»»¼ÒÍ¥
-const std::string CMD_GET_FAMILY_INFO = "fm_get_family_info";                                           //»ñÈ¡¼ÒÍ¥ĞÅÏ¢
-const std::string CMD_GET_FAMILY_LIST = "fm_get_family_list";                                           //»ñÈ¡¼ÒÍ¥ÁĞ±í
-const std::string CMD_APPLY_FAMILY = "fm_apply_family";                                                 //ÉêÇë¼ÓÈë¼ÒÍ¥(É¾³ı)
-const std::string CMD_ACCEPT_FAMILY = "fm_accept_family";                                               //Í¬Òâ¼ÓÈë¼ÒÍ¥(É¾³ı)
-const std::string CMD_GET_APPLY_LIST = "fm_get_apply_list";                                             //»ñÈ¡ÉêÇë¼ÓÈë¼ÒÍ¥ÁĞ±í(É¾³ı)
-const std::string CMD_GET_APPLY_CNT = "fm_get_apply_cnt";                                               //»ñÈ¡ÉêÇë¼ÓÈë¼ÒÍ¥Êı(É¾³ı)
-const std::string CMD_GET_APPLY_CODE = "fm_get_apply_code";                                 			//»ñÈ¡ÓÃ»§ÉêÇëÂë
-const std::string CMD_GET_INVITATION = "fm_get_invitation";                                 			//»ñÈ¡ÓÃ»§ÑûÇëº¯
-const std::string CMD_CREATE_MEMBER = "fm_create_member";											    //´´½¨¼ÒÍ¥³ÉÔ±
-const std::string CMD_REMOVE_MEMBER = "fm_remove_member";                                               //ÒÆ³ı¼ÒÍ¥³ÉÔ±
-const std::string CMD_UPDATE_MEMBER = "fm_update_member";                                               //¸üĞÂ¼ÒÍ¥³ÉÔ±ĞÅÏ¢
-const std::string CMD_GET_MEMBER_INFO = "fm_get_member_info";                                           //»ñÈ¡¼ÒÍ¥³ÉÔ±ĞÅÏ¢
-const std::string CMD_GET_MEMBER_LIST = "fm_get_member_list";                                           //»ñÈ¡¼ÒÍ¥³ÉÔ±ÁĞ±í
-const std::string CMD_GET_MEMBER_ID_LIST = "fm_get_member_id_list";                                     //»ñÈ¡¼ÒÍ¥³ÉÔ±ID ÁĞ±í
-const std::string CMD_CHECK_TALK_CONDITION = "fm_check_talk_condition";                                 //ÅĞ¶ÏÁÄÌìÌõ¼ş
-const std::string CMD_FM_BIND_ROUTERP = "fm_bind_router";                                               //°ó¶¨Â·ÓÉÆ÷(À´×ÔAPP)
-const std::string CMD_FM_UNBIND_ROUTER = "fm_unbind_router";                                            //½â°ó¶¨Â·ÓÉÆ÷(À´×ÔAPP)
+//ç”¨æˆ·ç®¡ç†
+const std::string CMD_REGISTER_USER = "um_register_user";                                               //æ³¨å†Œç”¨æˆ·
+const std::string CMD_LOGIN_PWD = "um_login_pwd";                                                       //ç™»å½•(å¯†ç )
+const std::string CMD_LOGIN_CODE = "um_login_code";                                                     //ç™»å½•(æ‰‹æœºéªŒè¯ç )
+const std::string CMD_AUTH = "um_auth";                                                                 //éªŒè¯        
+const std::string CMD_GET_PHONE_CODE = "um_get_phone_code";                                             //è·å–æ‰‹æœºéªŒè¯ç 
+const std::string CMD_CHECK_PHONE_CODE = "um_check_phone_code";                                         //æ£€æŸ¥æ‰‹æœºéªŒè¯ç 
+const std::string CMD_SET_PWD = "um_set_pwd";                                                           //è®¾ç½®å¯†ç 
+const std::string CMD_RESET_PWD = "um_reset_pwd";                                                       //é€šè¿‡æ‰‹æœºéªŒè¯ç é‡æ–°è®¾ç½®å¯†ç 
+const std::string CMD_GET_USER_PROFILE = "um_get_user_profile";                                         //è·å–ç”¨æˆ·ä¿¡æ¯
+const std::string CMD_UPDATE_USER_PROFILE = "um_update_user_profile";                                   //æ›´æ–°ç”¨æˆ·ä¿¡æ¯
+const std::string CMD_GET_USER_ACCOUNT = "um_get_user_account";                                         //è·å–ç”¨æˆ·è´¦æˆ·ä¿¡æ¯
 
 
-//·¿¼ä¹ÜÀí
-const std::string CMD_ADD_ROOM = "dm_add_room";                                                         //Ìí¼Ó·¿¼ä
-const std::string CMD_DEL_ROOM = "dm_del_room";                                                         //É¾³ı·¿¼ä
-const std::string CMD_UPDATE_ROOM = "dm_update_room";                                                   //¸üĞÂ·¿¼äĞÅÏ¢
-const std::string CMD_GET_ROOM_LIST = "dm_get_room_list";                                               //»ñÈ¡·¿¼äÁĞ±í
-const std::string CMD_UPDATE_ROOM_ORDER = "dm_update_room_order";                                       //Ë¢ĞÂ·¿¼äË³Ğò
+//å®¶åº­ç®¡ç†
+const std::string CMD_CREATE_FAMILY = "fm_create_family";                                               //åˆ›å»ºå®¶åº­
+const std::string CMD_UPDATE_FAMILY = "fm_update_family";                                               //æ›´æ–°å®¶åº­ä¿¡æ¯
+const std::string CMD_SWITCH_FAMILY = "fm_switch_family";                                               //åˆ‡æ¢å®¶åº­
+const std::string CMD_GET_FAMILY_INFO = "fm_get_family_info";                                           //è·å–å®¶åº­ä¿¡æ¯
+const std::string CMD_GET_FAMILY_LIST = "fm_get_family_list";                                           //è·å–å®¶åº­åˆ—è¡¨
+const std::string CMD_APPLY_FAMILY = "fm_apply_family";                                                 //ç”³è¯·åŠ å…¥å®¶åº­(åˆ é™¤)
+const std::string CMD_ACCEPT_FAMILY = "fm_accept_family";                                               //åŒæ„åŠ å…¥å®¶åº­(åˆ é™¤)
+const std::string CMD_GET_APPLY_LIST = "fm_get_apply_list";                                             //è·å–ç”³è¯·åŠ å…¥å®¶åº­åˆ—è¡¨(åˆ é™¤)
+const std::string CMD_GET_APPLY_CNT = "fm_get_apply_cnt";                                               //è·å–ç”³è¯·åŠ å…¥å®¶åº­æ•°(åˆ é™¤)
+const std::string CMD_GET_APPLY_CODE = "fm_get_apply_code";                                 			//è·å–ç”¨æˆ·ç”³è¯·ç 
+const std::string CMD_GET_INVITATION = "fm_get_invitation";                                 			//è·å–ç”¨æˆ·é‚€è¯·å‡½
+const std::string CMD_CREATE_MEMBER = "fm_create_member";											    //åˆ›å»ºå®¶åº­æˆå‘˜
+const std::string CMD_REMOVE_MEMBER = "fm_remove_member";                                               //ç§»é™¤å®¶åº­æˆå‘˜
+const std::string CMD_UPDATE_MEMBER = "fm_update_member";                                               //æ›´æ–°å®¶åº­æˆå‘˜ä¿¡æ¯
+const std::string CMD_GET_MEMBER_INFO = "fm_get_member_info";                                           //è·å–å®¶åº­æˆå‘˜ä¿¡æ¯
+const std::string CMD_GET_MEMBER_LIST = "fm_get_member_list";                                           //è·å–å®¶åº­æˆå‘˜åˆ—è¡¨
+const std::string CMD_GET_MEMBER_ID_LIST = "fm_get_member_id_list";                                     //è·å–å®¶åº­æˆå‘˜ID åˆ—è¡¨
+const std::string CMD_CHECK_TALK_CONDITION = "fm_check_talk_condition";                                 //åˆ¤æ–­èŠå¤©æ¡ä»¶
+const std::string CMD_FM_BIND_ROUTERP = "fm_bind_router";                                               //ç»‘å®šè·¯ç”±å™¨(æ¥è‡ªAPP)
+const std::string CMD_FM_UNBIND_ROUTER = "fm_unbind_router";                                            //è§£ç»‘å®šè·¯ç”±å™¨(æ¥è‡ªAPP)
 
 
-//Â·ÓÉÆ÷¹ÜÀí
-const std::string CMD_BIND_ROUTER = "dm_bind_router";                                                   //°ó¶¨Â·ÓÉÆ÷
-const std::string CMD_UNBIND_ROUTER = "dm_unbind_router";                                               //½â°ó¶¨Â·ÓÉÆ÷
-const std::string CMD_AUTH_ROUTER = "dm_auth_router";                                                   //Â·ÓÉÆ÷ Ğ£ÑéµÇÂ¼ 
-const std::string CMD_GET_ROUTER_INFO = "dm_get_router_info";                                           //»ñÈ¡Â·ÓÉÆ÷ĞÅÏ¢
-const std::string CMD_CHECK_ROUTER = "dm_check_router";                                                 //ÑéÖ¤ Â·ÓÉÆ÷ ÓĞĞ§ĞÔ
+//æˆ¿é—´ç®¡ç†
+const std::string CMD_ADD_ROOM = "dm_add_room";                                                         //æ·»åŠ æˆ¿é—´
+const std::string CMD_DEL_ROOM = "dm_del_room";                                                         //åˆ é™¤æˆ¿é—´
+const std::string CMD_UPDATE_ROOM = "dm_update_room";                                                   //æ›´æ–°æˆ¿é—´ä¿¡æ¯
+const std::string CMD_GET_ROOM_LIST = "dm_get_room_list";                                               //è·å–æˆ¿é—´åˆ—è¡¨
+const std::string CMD_UPDATE_ROOM_ORDER = "dm_update_room_order";                                       //åˆ·æ–°æˆ¿é—´é¡ºåº
 
 
-//Éè±¸¹ÜÀí
-const std::string CMD_ADD_DEIVCE = "dm_add_device";                                                     //Ìí¼ÓÉè±¸
-const std::string CMD_DEL_DEVICE = "dm_del_device";                                                     //É¾³ıÉè±¸
-const std::string CMD_UPDATE_DEVICE = "dm_update_device";                                               //Ë¢ĞÂÉè±¸
-const std::string CMD_GET_DEVICE_INFO = "dm_get_device_info";                                           //»ñÈ¡Éè±¸ĞÅÏ¢
-const std::string CMD_GET_DEVICES_BY_ROOM = "dm_get_devices_by_room";                                   //°´ÕÕ·¿¼ä»ñÈ¡Éè±¸ÁĞ±í
-const std::string CMD_GET_DEVICES_BY_FAMILY = "dm_get_devices_by_family";                               //°´ÕÕ¼ÒÍ¥»ñÈ¡Éè±¸ÁĞ±í
-const std::string CMD_REPORT_DEV_STATUS = "dm_report_dev_status";                                       //ÉÏ±¨Éè±¸×´Ì¬
-const std::string CMD_REPORT_DEV_ALERT = "dm_report_dev_alert";                                         //ÉÏ±¨Éè±¸¸æ¾¯
-const std::string CMD_GET_DEV_STATUS_LIST = "dm_get_dev_status_list";                                   //»ñÈ¡Éè±¸×´Ì¬ÁĞ±í
-const std::string CMD_GET_DEV_ALERT_LIST = "dm_get_dev_alert_list";                                     //ÉÏ±¨Éè±¸¸æ¾¯ÁĞ±í
-const std::string CMD_GET_DEV_KEY_PROPERTY = "dm_get_dev_key_property";                                 //»ñÈ¡Éè±¸¹Ø¼üÊôĞÔ
+//è·¯ç”±å™¨ç®¡ç†
+const std::string CMD_BIND_ROUTER = "dm_bind_router";                                                   //ç»‘å®šè·¯ç”±å™¨
+const std::string CMD_UNBIND_ROUTER = "dm_unbind_router";                                               //è§£ç»‘å®šè·¯ç”±å™¨
+const std::string CMD_AUTH_ROUTER = "dm_auth_router";                                                   //è·¯ç”±å™¨ æ ¡éªŒç™»å½• 
+const std::string CMD_GET_ROUTER_INFO = "dm_get_router_info";                                           //è·å–è·¯ç”±å™¨ä¿¡æ¯
+const std::string CMD_CHECK_ROUTER = "dm_check_router";                                                 //éªŒè¯ è·¯ç”±å™¨ æœ‰æ•ˆæ€§
+const std::string CMD_DM_GET_USER_ACCOUNT = "dm_get_user_account";                                      //è·å–ç”¨æˆ·è´¦æˆ·ä¿¡æ¯ï¼ˆrouterè°ƒç”¨ï¼‰ 
+
+
+//è®¾å¤‡ç®¡ç†
+const std::string CMD_ADD_DEIVCE = "dm_add_device";                                                     //æ·»åŠ è®¾å¤‡
+const std::string CMD_DEL_DEVICE = "dm_del_device";                                                     //åˆ é™¤è®¾å¤‡
+const std::string CMD_UPDATE_DEVICE = "dm_update_device";                                               //åˆ·æ–°è®¾å¤‡
+const std::string CMD_GET_DEVICE_INFO = "dm_get_device_info";                                           //è·å–è®¾å¤‡ä¿¡æ¯
+const std::string CMD_GET_DEVICES_BY_ROOM = "dm_get_devices_by_room";                                   //æŒ‰ç…§æˆ¿é—´è·å–è®¾å¤‡åˆ—è¡¨
+const std::string CMD_GET_DEVICES_BY_FAMILY = "dm_get_devices_by_family";                               //æŒ‰ç…§å®¶åº­è·å–è®¾å¤‡åˆ—è¡¨
+const std::string CMD_REPORT_DEV_STATUS = "dm_report_dev_status";                                       //ä¸ŠæŠ¥è®¾å¤‡çŠ¶æ€
+const std::string CMD_REPORT_DEV_ALERT = "dm_report_dev_alert";                                         //ä¸ŠæŠ¥è®¾å¤‡å‘Šè­¦
+const std::string CMD_GET_DEV_STATUS_LIST = "dm_get_dev_status_list";                                   //è·å–è®¾å¤‡çŠ¶æ€åˆ—è¡¨
+const std::string CMD_GET_DEV_ALERT_LIST = "dm_get_dev_alert_list";                                     //ä¸ŠæŠ¥è®¾å¤‡å‘Šè­¦åˆ—è¡¨
+const std::string CMD_GET_DEV_KEY_PROPERTY = "dm_get_dev_key_property";                                 //è·å–è®¾å¤‡å…³é”®å±æ€§
+
+//å¿«æ·åŠŸèƒ½
+const std::string CMD_ADD_SHORTCUT				= "dm_add_shortcut";                                    //æ·»åŠ å¿«æ·
+const std::string CMD_DEL_SHORTCUT				= "dm_del_shortcut";                                    //åˆ é™¤å¿«æ·
+const std::string CMD_GET_SHORTCUT_LIST			= "dm_get_shortcut_list";                               //è·å–å¿«æ·åˆ—è¡¨
+const std::string CMD_UPDATE_SHORTCUT			= "dm_update_shortcut";                                 //æ›´æ–°å¿«æ·
+const std::string CMD_UPDATE_SHORTCUT_ORDER     = "dm_sort_shortcut";									//ä¿®æ”¹å¿«æ·æ–¹å¼ä½ç½®
+const std::string CMD_GET_SHORTCUT_MODE			= "dm_get_shortcut_mode";                               //è·å–å¿«æ·æ¨¡å¼
+const std::string CMD_SET_SHORTCUT_MODE			= "dm_set_shortcut_mode";                               //è®¾ç½®å¿«æ·æ¨¡å¼
+const std::string CMD_GET_SHORTCUT_FILTER		= "dm_get_shortcut_filter";                             //è·å–å¿«æ·è¿‡æ»¤å™¨
 
 
 //MDP
-const std::string CMD_MDP_MSG = "mdp_msg";                                                              //Â·ÓÉÏûÏ¢
-const std::string CMD_MDP_REGISTER = "mdp_register";                                                    //×¢²áµ½mdp
+const std::string CMD_MDP_MSG = "mdp_msg";                                                              //è·¯ç”±æ¶ˆæ¯
+const std::string CMD_MDP_REGISTER = "mdp_register";                                                    //æ³¨å†Œåˆ°mdp
 
 
-//Í¬²½·şÎñÆ÷
-const std::string CMD_SYN_REQ = "syn_req";                                                              //Êı¾İÍ¬²½ÇëÇó
-const std::string CMD_SYN_RSP = "syn_rsp";                                                              //Êı¾İÍ¬²½ÏìÓ¦
-const std::string CMD_SYN_REGISTER = "syn_register";                                                    //×¢²áÂ·ÓÉÆ÷ID
-const std::string CMD_SYN_UNREGISTER = "syn_unregister";                                                //È¥×¢²áÂ·ÓÉÆ÷ID
-
+//æ•°æ®åŒæ­¥æ¶ˆæ¯
 const std::string CMD_SYN_ADD_MEMBER = "syn_add_member"; 
 const std::string CMD_SYN_UPDATE_MEMBER = "syn_update_member"; 
 const std::string CMD_SYN_DEL_MEMBER = "syn_del_member"; 
 const std::string CMD_SYN_UPDATE_FAMILY = "syn_update_family"; 
-const std::string CMD_SYN_USER_STATUS = "syn_user_status"; 
+const std::string CMD_SYN_CLIENT_STATUS = "syn_client_status"; 
 const std::string CMD_SYN_APPLY_FAMILY = "syn_apply_family"; 
 const std::string CMD_SYN_UPDARE_USER = "syn_update_user";	
 
 
 //SMS
-const std::string CMD_SMS = "sms";                                                                      //¶ÌĞÅ
+const std::string CMD_SMS = "sms";                                                                      //çŸ­ä¿¡
 
 
-//ÍÆËÍ·şÎñ
-const std::string CMD_PUSH_MSG = "push_msg";                                                            //ÍÆËÍÏûÏ¢
+//æ¨é€æœåŠ¡
+const std::string CMD_PUSH_MSG = "push_msg";                                                            //æ¨é€æ¶ˆæ¯
 
 
-//¹ÜÀíÏûÏ¢
+//ç®¡ç†æ¶ˆæ¯
 const std::string CMD_SYS_KICKOFF_CLIENT = "sys_kickoff_client"; 
-
 
 
 #endif

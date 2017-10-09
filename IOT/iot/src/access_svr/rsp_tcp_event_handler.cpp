@@ -8,9 +8,12 @@
 #include "msg_oper.h"
 #include "protocol.h"
 #include "req_mgt.h"
+#include "rsp_mgt.h"
 
 extern Logger g_logger;
 extern StSysInfo g_sysInfo;
+extern Req_Mgt *g_asyn_mgt;
+extern Rsp_Mgt *g_syn_mgt;
 
 RSP_TCP_Event_Handler::RSP_TCP_Event_Handler(const std::string &svr_name): _buf(""), _svr_name(svr_name)
 {
@@ -24,7 +27,7 @@ RSP_TCP_Event_Handler::~RSP_TCP_Event_Handler()
 };
 
 
-//´¦Àí¶ÁÊÂ¼ş
+//å¤„ç†è¯»äº‹ä»¶
 int RSP_TCP_Event_Handler::handle_input(int fd)
 {
 	int nRet = 0;
@@ -48,12 +51,12 @@ int RSP_TCP_Event_Handler::handle_input(int fd)
 	}
 	buf[buf_len] = '\0';
 
-	//×·¼Ó»º´æ
+	//è¿½åŠ ç¼“å­˜
 	_buf += buf;
 	std::string::size_type pos = _buf.find("\n");
 	while(pos != std::string::npos)
 	{
-		//½âÎöÍêÕûÇëÇó´®
+		//è§£æå®Œæ•´è¯·æ±‚ä¸²
 		std::string req_src = _buf.substr(0, pos);
 		_buf.erase(0, pos+1);
 		
@@ -81,19 +84,30 @@ int RSP_TCP_Event_Handler::handle_input(int fd)
 			}
 			else
 			{
-				//»ñÈ¡¶Ô¶Ëip ºÍport
+				//è·å–å¯¹ç«¯ip å’Œport
 				std::string ip = "";
 				unsigned short port = 0;
 				get_remote_socket(fd, ip, port);
 	
 				Request *req = new Request;
-				req->_stmp = getTimestamp();
+				req->_rcv_stmp = getTimestamp();
 				req->_req = req_src;
 				req->_msg_tag = msg_tag;
 				req->_fd = fd;
 				req->_ip = ip;
-				req->_port = port;			
-				PSGT_Rsp_Mgt->push_req(msg_tag, req);
+				req->_port = port;
+
+				if((method == CMD_CHECK_TALK_CONDITION) || (method == CMD_GET_MEMBER_ID_LIST)) 
+				{
+					//ä¸šåŠ¡æœåŠ¡åŒæ­¥å“åº”
+					g_syn_mgt->push_req(msg_tag, req);
+				}
+				else
+				{
+					//ä¸šåŠ¡æœåŠ¡å¼‚æ­¥å“åº”
+					g_asyn_mgt->push_req(req);
+				}
+
 			}
 			
 		}
@@ -109,7 +123,7 @@ int RSP_TCP_Event_Handler::handle_input(int fd)
 
 
 
-//´¦ÀíÁ¬½Ó¹Ø±ÕÊÂ¼ş
+//å¤„ç†è¿æ¥å…³é—­äº‹ä»¶
 int RSP_TCP_Event_Handler::handle_close(int fd)
 {
 	int nRet = 0;

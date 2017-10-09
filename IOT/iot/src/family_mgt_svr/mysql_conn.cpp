@@ -310,9 +310,7 @@ int mysql_conn::connect_conn(const std::string &ip, unsigned int port,
 
 }
 
-
-
-int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
+int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set, std::string &errInfo)
 {
 
 	int nRet = 0;
@@ -320,22 +318,25 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 	if(!_conn)
 	{
 		XCP_LOGGER_ERROR(&g_logger, "the mysql is not connected.\n");
-		return -1;
+		errInfo = "the mysql is not connected";
+		return ERR_GET_MYSQL_CONN_FAILED;
 	}
 	
 	if(sql.empty())
 	{
 		XCP_LOGGER_ERROR(&g_logger, "the sql is empty.\n");
-		return -2;
+		errInfo = "the sql is empty";
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 	
 	XCP_LOGGER_INFO(&g_logger, "excute sql command:%s.\n", sql.c_str());
 	nRet = mysql_real_query(_mysql, sql.c_str(), sql.size());
 	if (0 != nRet)
 	{
+		errInfo = mysql_error(_mysql);
 		XCP_LOGGER_ERROR(&g_logger, "mysql_real_query failed, sql:%s, ret:%d, err code:%d, err msg:%s\n", 
-			sql.c_str(), nRet, mysql_errno(_mysql), mysql_error(_mysql));
-		return -3;
+			sql.c_str(), nRet, mysql_errno(_mysql), errInfo.c_str());
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	//printf("mysql_real_query success, sql:%s\n", sql.c_str());
@@ -347,7 +348,7 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 		XCP_LOGGER_ERROR(&g_logger, "mysql_store_result failed, sql:%s, err code:%d, err msg:%s\n", 
 			sql.c_str(), mysql_errno(_mysql), mysql_error(_mysql));	
 		
-		return -4;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	int num_field = mysql_num_fields(pRes);
@@ -404,27 +405,29 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 	mysql_free_result(pRes);
 
 	XCP_LOGGER_INFO(&g_logger, "query sucess. get %d record\n", num_row);
-	return nRet;
+	return 0;
 
 }
 
 
 
 
-int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_insert_id, unsigned long long &affected_rows)
+int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_insert_id, unsigned long long &affected_rows, std::string &errInfo)
 {
 	int nRet = 0;
 	
 	if(!_conn)
 	{
 		XCP_LOGGER_ERROR(&g_logger, "the mysql is not connected.\n");
-		return -1;
+		errInfo = "the mysql is not connected";
+		return ERR_GET_MYSQL_CONN_FAILED;
 	}
 	
 	if(sql.empty())
 	{
 		XCP_LOGGER_INFO(&g_logger, "the sql is empty.\n");
-		return -2;
+		errInfo = "the sql is empty";
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	XCP_LOGGER_INFO(&g_logger, "excute sql command:%s.\n", sql.c_str());
@@ -432,8 +435,9 @@ int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_inse
 	nRet = mysql_real_query(_mysql, sql.c_str(), sql.size());
 	if (0 != nRet)
 	{
+		errInfo = mysql_error(_mysql);
 		XCP_LOGGER_ERROR(&g_logger, "execute_sql failed, ret:%d, err code:%d, err msg:%s\n", 
-			nRet, mysql_errno(_mysql), mysql_error(_mysql));
+			nRet, mysql_errno(_mysql), errInfo.c_str());
 		if(mysql_errno(_mysql) == ER_DUP_ENTRY)
 		{
 			return ERR_DUPLICATE_KEY;
@@ -444,7 +448,7 @@ int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_inse
 			return ERR_TABLE_EXISTS;
 		}
 		
-		return -3;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	//printf("exec sql success, sql:%s\n", sql.c_str());
@@ -474,7 +478,7 @@ int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_inse
 	XCP_LOGGER_INFO(&g_logger, "excute sql command success, last insert id:%d, affected rows:%d.\n",
 		last_insert_id, affected_rows);
 	
-	return nRet;
+	return 0;
 
 }
 

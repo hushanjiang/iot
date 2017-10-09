@@ -9,11 +9,13 @@
 #include "conn_mgt_lb.h"
 #include "mysql_mgt.h"
 #include "redis_mgt.h"
+#include "mongo_mgt.h"
 #include "rsp_tcp_event_handler.h"
 
 extern Logger g_logger;
 extern StSysInfo g_sysInfo;
 extern mysql_mgt g_mysql_mgt;
+extern redis_mgt g_redis_mgt;
 
 extern Conn_Mgt_LB g_conf_mgt_conn;
 extern Conn_Mgt_LB g_uid_conn;
@@ -42,7 +44,6 @@ int Conf_Mgt::init(const std::string &cfg)
 		return nRet;
 	}
 
-	//³õÊ¼»¯TCP Á¬½Ó¹ÜÀí
 	nRet = init_conn_mgt();
 	if(nRet != 0)
 	{	
@@ -50,7 +51,6 @@ int Conf_Mgt::init(const std::string &cfg)
 		return nRet;
 	}
 
-	//Æô¶¯conf mgt  timer
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start conf mgt timer ---\n");
 	Select_Timer *timer_req = new Select_Timer;
 	Conf_Timer_handler *conf_thandler = new Conf_Timer_handler;
@@ -86,13 +86,31 @@ int Conf_Mgt::init(const std::string &cfg)
 	}
 
 	//redis
-	nRet = PSGT_Redis_Mgt->init(_redises[0]._ip, _redises[0]._port, _redises[0]._auth);
-	if(nRet != 0)
+	nRet = g_redis_mgt.init(_redises[0]._ip, _redises[0]._port, _redises[0]._auth, _redises[0]._num);
+	if (nRet != 0)
 	{
-		printf("init redis failed, ret:%d\n", nRet);
+		printf("init redis_mgt write failed, ret:%d\n", nRet);
 		return nRet;
 	}
-	
+	else {
+		printf("init redis_mgt success!\n");
+	}
+
+	//mongodb
+	PSGT_Mongo_Mgt->update(_mongos[0]);
+	nRet = PSGT_Mongo_Mgt->init(NULL);
+	if(nRet != 0)
+	{
+		printf("init mongo mgt failed, ret:%d\n", nRet);
+		return nRet;
+	}
+	nRet = PSGT_Mongo_Mgt->run();
+	if(nRet != 0)
+	{
+		printf("mongo mgt run failed, ret:%d\n", nRet);
+		return nRet;
+	}
+
 	return nRet;
 	
 }
@@ -100,7 +118,7 @@ int Conf_Mgt::init(const std::string &cfg)
 
 
 
-//³õÊ¼»¯ËùÓÐµÄ³¤Á¬½Ó³Ø
+//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ³ï¿½ï¿½ï¿½ï¿½Ó³ï¿½
 int Conf_Mgt::init_conn_mgt()
 {
 	int nRet = 0;
@@ -201,7 +219,7 @@ int Conf_Mgt::refresh()
 		}
 	}
 	
-	//Message IDÃüÃû¹æÔò£º [svr id]_[ip]_[port]
+	//Message IDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ [svr id]_[ip]_[port]
 	sysInfo._new_id = format("%s_%s_%u", sysInfo._id.c_str(), sysInfo._ip.c_str(), sysInfo._port);
 	
 	//thr_num
@@ -383,12 +401,14 @@ int Conf_Mgt::refresh()
 			return -1;
 		}
 
-		stMysql_Access._num = (unsigned int)atoll(vecNode[i].get_attr_str("num").c_str());
+		/**stMysql_Access._num = (unsigned int)atoll(vecNode[i].get_attr_str("num").c_str());
 		if(stMysql_Access._num == 0)
 		{
 			printf("mysql svr num is 0\n");
 			return -1;
-		}
+		}**/
+		//è¿žæŽ¥æ± çš„é•¿åº¦= çº¿ç¨‹æ•°+3
+		stMysql_Access._num = sysInfo._thr_num + EXTRA_CONNCTION_POOL_NUM;
 		mysqls[mode] = stMysql_Access;
 		
 	}
@@ -448,6 +468,10 @@ int Conf_Mgt::refresh()
 			printf("redis svr auth is empty\n");
 			return -1;
 		}
+
+		//stRedis_Access._num = (unsigned short)atoll(vecNode[i].get_attr_str("num").c_str());
+		//è¿žæŽ¥æ± çš„é•¿åº¦= çº¿ç¨‹æ•°+3
+		stRedis_Access._num = sysInfo._thr_num + EXTRA_CONNCTION_POOL_NUM;
 		redises.push_back(stRedis_Access);
 		
 	}
@@ -461,6 +485,59 @@ int Conf_Mgt::refresh()
 	{
 		Thread_Mutex_Guard guard(_mutex);
 		_redises = redises;
+	}
+
+	//------------------ mongo ------------------
+	std::vector<StMongo_Access> mongos;	
+	vecNode.clear();
+	nRet = _parser.get_nodes("device_mgt_svr/mongo/svr", vecNode);
+	if(nRet != 0)
+	{
+		printf("get redis svr failed, ret:%d\n", nRet);
+		return -1;
+	}
+
+	if(vecNode.empty())
+	{
+		printf("redis/svr is empty\n");
+		return -1;
+	}
+
+	for(unsigned int i=0; i<vecNode.size(); ++i)
+	{
+		StMongo_Access stMongo_Access;
+			
+		stMongo_Access._ip = vecNode[i].get_attr_str("ip");
+		trim(stMongo_Access._ip);
+		if(stMongo_Access._ip == "")
+		{
+			printf("mongo svr ip is empty\n");
+			return -1;
+		}
+		
+		stMongo_Access._port = (unsigned short)atoll(vecNode[i].get_attr_str("port").c_str());
+		if(stMongo_Access._port == 0)
+		{
+			printf("mongo svr port is 0\n");
+			return -1;
+		}
+		std::ostringstream server;
+		server << "mongodb://" << stMongo_Access._ip << ":" << stMongo_Access._port << "/";
+		stMongo_Access._server = server.str();
+		stMongo_Access._db = "tbl_report";
+		stMongo_Access._collection = "db_report";
+		mongos.push_back(stMongo_Access);
+	}
+	
+	if(mongos.empty())
+	{
+		printf("mongo svr is empty\n");
+		return -1;
+	}
+	else
+	{
+		Thread_Mutex_Guard guard(_mutex);
+		_mongos = mongos;
 	}
 
 	return 0;
@@ -522,7 +599,7 @@ int Conf_Mgt::update_svr()
 
 
 
-//»ñÈ¡¸±±¾
+//ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
 StSysInfo Conf_Mgt::get_sysinfo()
 {
 	Thread_Mutex_Guard guard(_mutex);

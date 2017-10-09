@@ -100,7 +100,7 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 		else if(req_src.size() > MAX_MSG_LEN)
 		{
 			XCP_LOGGER_ERROR(&g_logger, "the req reach max len(%u)\n", MAX_MSG_LEN);
-			Msg_Oper::send_msg(fd, "", 0, "", ERR_REACH_MAX_MSG, "the req reach max len.");
+			Msg_Oper::send_msg(fd, "", 0, "", "", "", "", ERR_REACH_MAX_MSG, "the req reach max len.");
 		}
 		else
 		{
@@ -122,14 +122,14 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 				{
 					XCP_LOGGER_ERROR(&g_logger, "push req into req mgt failed, ret:%d, req(%u):%s\n", 
 						nRet, buf_len, buf);
-					Msg_Oper::send_msg(fd, "", 0, "", ERR_PUSH_QUEUE_FAIL, "push req into req mgt failed.");
+					Msg_Oper::send_msg(fd, "", 0, "", "", "", "", ERR_PUSH_QUEUE_FAIL, "push req into req mgt failed.");
 				}
 				
 			}
 			else
 			{		
 				XCP_LOGGER_ERROR(&g_logger, "req mgt is full, req(%u):%s\n", buf_len, buf);			
-				Msg_Oper::send_msg(fd, "", 0, "", ERR_QUEUE_FULL, "req mgt is full.");
+				Msg_Oper::send_msg(fd, "", 0, "", "", "", "", ERR_QUEUE_FULL, "req mgt is full.");
 			}
 
 		}

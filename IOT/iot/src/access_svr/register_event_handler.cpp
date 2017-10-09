@@ -24,7 +24,7 @@ Register_Event_Handler::~Register_Event_Handler()
 };
 
 
-//´¦Àí¶ÁÊÂ¼ş
+//å¤„ç†è¯»äº‹ä»¶
 int Register_Event_Handler::handle_input(int fd)
 {
 	int nRet = 0;
@@ -48,12 +48,12 @@ int Register_Event_Handler::handle_input(int fd)
 	}
 	buf[buf_len] = '\0';
 
-	//×·¼Ó»º´æ
+	//è¿½åŠ ç¼“å­˜
 	_buf += buf;
 	std::string::size_type pos = _buf.find("\n");
 	while(pos != std::string::npos)
 	{
-		//½âÎöÍêÕûÇëÇó´®
+		//è§£æå®Œæ•´è¯·æ±‚ä¸²
 		std::string req_src = _buf.substr(0, pos);
 		_buf.erase(0, pos+1);
 		
@@ -83,7 +83,7 @@ int Register_Event_Handler::handle_input(int fd)
 			{
 				if(method == CMD_REGISTER)
 				{
-					//×¢²áÏìÓ¦ÏûÏ¢
+					//æ³¨å†Œå“åº”æ¶ˆæ¯
 					std::string ip = "";
 					unsigned short port = 0;
 					get_remote_socket(fd, ip, port);
@@ -112,7 +112,7 @@ int Register_Event_Handler::handle_input(int fd)
 				}	
 				else
 				{
-					//ÆäËûµÄÇëÇó
+					//å…¶ä»–çš„è¯·æ±‚
 				}
 
 			}
@@ -130,7 +130,7 @@ int Register_Event_Handler::handle_input(int fd)
 
 
 
-//´¦ÀíÁ¬½Ó¹Ø±ÕÊÂ¼ş
+//å¤„ç†è¿æ¥å…³é—­äº‹ä»¶
 int Register_Event_Handler::handle_close(int fd)
 {
 	int nRet = 0;
@@ -146,7 +146,7 @@ int Register_Event_Handler::handle_close(int fd)
 	XCP_LOGGER_INFO(&g_logger, "close (fd:%d) from %s svr, %s:%u --> %s:%u\n", 
 		fd, _svr_name.c_str(), remote_ip.c_str(), remote_port, local_ip.c_str(), local_port);
 	
-	//Ë¢ĞÂ×¢²á±êÖ¾Î»
+	//åˆ·æ–°æ³¨å†Œæ ‡å¿—ä½
 	std::string router_id = format("%s_%u", remote_ip.c_str(), remote_port);
 	Conn_Ptr conn;
 	if(_conn_mgt->get_conn(router_id, conn))

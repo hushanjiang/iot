@@ -31,13 +31,16 @@ USING_NS_BASE;
 class Msg_Oper
 {
 public:
-	
-	static int send_msg(int fd, const std::string &session_id, const std::string &method, const unsigned int req_id, const std::string &msg_tag,  
+
+	static int send_msg(int fd, const std::string &session_id, const std::string &uuid, const std::string &encry, const std::string &key, 
+		const std::string &method, const unsigned int req_id, const std::string &msg_tag,  
 		const int code, const std::string &msg, const std::string &body="", bool is_object = false);
 
-	static int send_msg(int fd, const std::string &session_id, const std::string &buf);
+	static int send_msg(int fd, const std::string &session_id, 
+		const std::string &uuid, const std::string &encry, const std::string &key, const std::string &buf);
 
-
+	
+	
 private:
 	static Thread_Mutex _mutex_msg;
 	

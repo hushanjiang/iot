@@ -17,14 +17,14 @@ mysql_mgt::~mysql_mgt()
 
 
 
-//³õÊ¼»¯
+//åˆå§‹åŒ–
 int mysql_mgt::init(const std::string &ip, unsigned int port, 
 		                  const std::string &user, const std::string &pwd, 
 			              const std::string &db, const unsigned int cnt, const std::string &chars)
 {
 	int nRet = 0;
 
-	//´´½¨mysqlÁ¬½Ó³Ø
+	//åˆ›å»ºmysqlè¿æ¥æ± 
 	for(unsigned int i=0; i<cnt; i++)
 	{
 		mysql_conn_Ptr conn = new mysql_conn(i);

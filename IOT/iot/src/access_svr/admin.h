@@ -29,7 +29,7 @@
 USING_NS_BASE;
 
 /*
-Admin 是处理信号的独立线程
+Admin 鏄鐞嗕俊鍙风殑鐙珛绾跨▼
 */
 class Admin : public Thread
 {

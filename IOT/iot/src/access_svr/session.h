@@ -42,13 +42,20 @@ public:
 	
 public:
 	std::string _id;
+	unsigned long long _client_id;
+	
+	std::string _uuid;  //安全通道ID 
+	std::string _key;   //安全通道秘钥
+	
 	int _fd;
 	std::string _ip;
 	unsigned short _port;
 	bool _status;
-	unsigned long long _create_time;  //΢��
+	
+	unsigned long long _create_time;  //微秒
 	unsigned long long _access_time;
 	unsigned long long _close_time;
+	
 	unsigned long long _r_num;
 	unsigned long long _w_num;
 		

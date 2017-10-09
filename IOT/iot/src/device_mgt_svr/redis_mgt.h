@@ -26,58 +26,55 @@
 #include <hiredis/hiredis.h>
 #include "base/base_singleton_t.h"
 #include "comm/common.h"
+#include "redis_conn.h"
 
 
 USING_NS_BASE;
 
-class Redis_Mgt
+class redis_mgt
 {
 public:
-    Redis_Mgt();
-    virtual ~Redis_Mgt();
+    redis_mgt();
+    virtual ~redis_mgt();
 
-	int init(const std::string &ip, const unsigned int port, const std::string &auth);
+	//初始化
+	int init(const std::string &ip, unsigned int port, const std::string &pwd,const unsigned int cnt);
 
-	void release();
+	bool get_conn(redis_conn_Ptr &conn);
 
-	void check();	
+	//检测redis状态并且按照周期要求创建数据表
+	void check();
 
-	int connect();
-
-	int ping();
-
-public:
-	int create_security_channel(const std::string &id, std::string &key, std::string &err_info);
-
-	int refresh_security_channel(const std::string &id, std::string &err_info);
-
-	int release_security_channel(const std::string &id, std::string &err_info);
-
-	int set(const std::string &id, const unsigned long long &value);
-
-	int get(const std::string &id, unsigned long long &value);
-
-	int hset(const std::string &id, const std::string &key, const std::string &value, std::string &err_info);
-
-	int hget(const std::string &id, const std::string &key, std::string &value, std::string &err_info);	
-
-	int remove(const std::string &id);
-	
-	bool isExist(const std::string &id);
-
-	bool isExist(const std::string &id, const std::string &key);
+	void release(redis_conn_Ptr &conn);
 
 private:
-	redisContext *_redis;  //��Ҫȷ���Ƿ����̰߳�ȫ��
+	//数据库连接池
+	std::vector<redis_conn_Ptr> _conn_queue;
 	Thread_Mutex _mutex;
-	bool _valid;
-	std::string _ip;
-	unsigned short _port;
-	std::string _auth;
-	
+
 };
 
-#define PSGT_Redis_Mgt Singleton_T<Redis_Mgt>::getInstance()
+#define PSGT_Redis_Mgt Singleton_T<redis_mgt>::getInstance()
+
+//----------------------------
+//保护类， 不支持拷贝构造
+class Redis_Guard : public noncopyable
+{
+public:
+
+	//构造MySQL_Guard 对象只能使用下面这种方式
+	Redis_Guard(redis_conn_Ptr &conn);
+
+	~Redis_Guard();
+
+	redis_conn_Ptr& operator-> ();
+
+private:
+	redis_conn_Ptr _conn;
+
+};
+
+
 
 #endif
 

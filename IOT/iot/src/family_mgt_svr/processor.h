@@ -40,6 +40,7 @@ private:
 	int _get_uuid(const std::string &msg_tag, std::string &err_info, unsigned long long &uuid);
 
 	virtual int do_init(void *args);
+	
 };
 
 #endif

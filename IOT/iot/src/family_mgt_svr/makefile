@@ -3,7 +3,7 @@ CC = g++ -DLINUX
 FLAGS = -W -g
 
 BASE_ROOT=/home/xucuiping/sdk/base
-JSON_ROOT=../../../../../3rd_party/sdk/json-c
+JSON_ROOT=../../../../../3rd_party/sdk/rapidjson
 TINY_XML_ROOT=../../../../../3rd_party/sdk/tinyxml
 MYSQL_ROOT=/home/xucuiping/tool/sdk/mysql
 HIREDIS_ROOT=../../../../../3rd_party/sdk/hiredis
@@ -18,7 +18,7 @@ INCLUDES=-I./ -I../ -I$(BASE_ROOT)/include/ -I$(JSON_ROOT)/include/ \
 LIB_PATH=
 
 SHARE_LIBS=$(BASE_ROOT)/lib/libbase.a \
-$(JSON_ROOT)/lib/libjson-c.a $(TINY_XML_ROOT)/lib/libtinyxml.a $(MYSQL_ROOT)/lib/libmysqlclient_r.a \
+$(TINY_XML_ROOT)/lib/libtinyxml.a $(MYSQL_ROOT)/lib/libmysqlclient_r.a \
 $(HIREDIS_ROOT)/lib/libhiredis.a  $(CURL_ROOT)/lib/libcurl.a \
 $(CRYPTOPP_ROOT)/lib/libcryptopp.a $(OPENSSL_ROOT)/lib/libssl.a $(OPENSSL_ROOT)/lib/libcrypto.a \
 -lpthread -ldl -lrt -lz

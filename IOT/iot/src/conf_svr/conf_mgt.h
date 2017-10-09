@@ -32,7 +32,7 @@ USING_NS_BASE;
 
 
 
-//ÒÔºóĞÂ¼Ó´æ´¢ÏµÍ³£¬ ĞèÒªÔö¼ÓĞÂµÄapi
+//ä»¥åæ–°åŠ å­˜å‚¨ç³»ç»Ÿï¼Œ éœ€è¦å¢åŠ æ–°çš„api
 class Conf_Mgt
 {
 public:
@@ -44,12 +44,13 @@ public:
 	
 	int refresh();
 
-	//»ñÈ¡¸±±¾
+	//è·å–å‰¯æœ¬
 	StSysInfo get_sysinfo();
 
 public:
 	int get_server_access(std::string &svr_name, std::map<std::string, std::vector<StSvr> > &svrs, std::string &err_info);
 
+	int get_sys_config(std::map<std::string, int> &maps, std::string &err_info);
 
 private:
 	Thread_Mutex _mutex;

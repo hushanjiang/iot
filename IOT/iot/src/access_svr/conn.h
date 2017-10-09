@@ -31,10 +31,10 @@
 USING_NS_BASE;
 
 /*
-Conn ¼È¿ÉÒÔÊÇÍ¬²½Á¬½ÓÒ²¿ÉÒÔÊÇÒì²½Á¬½Ó¡£
-Òì²½Á¬½ÓµÄºÃ´¦¾ÍÊÇ¶Ô¶Ë¹Ø±Õ£¬¸ÃConn »áÁ¢¼´ÖªµÀ¡£
-Í¬²½Á¬½ÓÔÚ¶Ô¶Ë¹Ø±ÕµÄÇé¿öÏÂ£¬²»»áÁ¢¼´ÖªµÀ£¬ÔÚÊ¹ÓÃ¸ÃConn·¢ËÍºó»ØÊÕµ½¶Ô¶ËµÄRST ±¨ÎÄ£¬
-ÔÙÊ¹ÓÃ¸ÃConn½ÓÊÕ»á·µ»Ø0(±íÃ÷¸ÃConn ÒÑ¾­¹Ø±Õ)£¬»á´ÓConn MgtÖĞ±êÊ¶²»¿ÉÓÃ¡£ºóÃæ²»»á´ÓConn MgtÖĞ»ñÈ¡µ½¡£
+Conn æ—¢å¯ä»¥æ˜¯åŒæ­¥è¿æ¥ä¹Ÿå¯ä»¥æ˜¯å¼‚æ­¥è¿æ¥ã€‚
+å¼‚æ­¥è¿æ¥çš„å¥½å¤„å°±æ˜¯å¯¹ç«¯å…³é—­ï¼Œè¯¥Conn ä¼šç«‹å³çŸ¥é“ã€‚
+åŒæ­¥è¿æ¥åœ¨å¯¹ç«¯å…³é—­çš„æƒ…å†µä¸‹ï¼Œä¸ä¼šç«‹å³çŸ¥é“ï¼Œåœ¨ä½¿ç”¨è¯¥Connå‘é€åå›æ”¶åˆ°å¯¹ç«¯çš„RST æŠ¥æ–‡ï¼Œ
+å†ä½¿ç”¨è¯¥Connæ¥æ”¶ä¼šè¿”å›0(è¡¨æ˜è¯¥Conn å·²ç»å…³é—­)ï¼Œä¼šä»Conn Mgtä¸­æ ‡è¯†ä¸å¯ç”¨ã€‚åé¢ä¸ä¼šä»Conn Mgtä¸­è·å–åˆ°ã€‚
 */
 class Conn : public RefCounter
 {
@@ -56,26 +56,34 @@ public:
 	int rcv(char *buf, unsigned int &len, unsigned int timeout=300000);
 	
 public:
-	//Òì²½×¢²áÇëÇó
-	int register_worker(bool out_ip=false);
-	int unregister_worker();
-	int hb();
+	int register_lb();
+	int hb_lb();
 
+	int register_mdp();	
+	
 public:
-	int inner_message(const std::string &msg_tag, const std::string &req, std::string &rsp, std::string &err_info);
+	int inner_message(const std::string &msg_tag, std::string &req, std::string &err_info);
 
 	int get_server_access(std::map<std::string, std::vector<StSvr> > &svrs, std::string &err_info);
-	
+
+	int check_talk_condition(const std::string &msg_tag, const std::string &from_svr, const std::string &uuid, const std::string &encry, const std::string &session_id, 
+		const unsigned long long src_id, const unsigned long long target_id, const std::string &msg_type, std::string &err_info);
+
+	int get_member_id_list(const std::string &msg_tag, const std::string &from_svr, const std::string &uuid, const std::string &encry, const std::string &session_id, 
+		const unsigned long long user_id, const unsigned long long family_id, std::set<unsigned long long> &members, std::string &err_info);
+
+	int notify_client_status(const std::string &msg_tag, const unsigned long long id, const std::string &type, const std::string &status, std::string &err_info);
+
 public:
 	StSvr _svr;
-	unsigned long long _stmp_create;   //Á¬½Ó´´½¨Ê±¼ä´Á
-	unsigned long long _stmp_hb;       //×îºóĞÄÌøÊ±¼ä´Á
+	unsigned long long _stmp_create;   //è¿æ¥åˆ›å»ºæ—¶é—´æˆ³
+	unsigned long long _stmp_hb;       //æœ€åå¿ƒè·³æ—¶é—´æˆ³
 	
-	TCP_Client_Epoll *_client;       //³¤Á¬½ÓÕâ¸öÒÑ¾­ÊÍ·ÅÁË
+	TCP_Client_Epoll *_client;         //é•¿è¿æ¥è¿™ä¸ªå·²ç»é‡Šæ”¾äº†
 	Event_Handler *_handler;
 	bool _asyn;
 
-	//ÊÇ·ñÒÑ¾­×¢²á
+	//æ˜¯å¦å·²ç»æ³¨å†Œ
 	bool _registered;
 	
 };

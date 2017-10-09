@@ -6,6 +6,7 @@
 #include "base/base_convert.h"
 
 extern Logger g_logger;
+extern StSysInfo g_sysInfo;
 
 
 Redis_Mgt::Redis_Mgt(): _redis(NULL), _valid(false), _ip(""), _port(0), _auth("") 
@@ -29,10 +30,10 @@ int Redis_Mgt::init(const std::string &ip, const unsigned int port, const std::s
 	_port = port;
 	_auth = auth;
 
-	//³õÊ¼»¯ÏÈÁ¬½ÓÒ»ÏÂ£¬ºóÃæ¶¨Ê±Æ÷»á¶¨Ê±¼ì²âredis serverµÄ×´Ì¬
+	//åˆå§‹åŒ–å…ˆè¿æ¥ä¸€ä¸‹ï¼Œåé¢å®šæ—¶å™¨ä¼šå®šæ—¶æ£€æµ‹redis serverçš„çŠ¶æ€
 	connect();
 
-	//Æô¶¯conn mgt  timer
+	//å¯åŠ¨conn mgt  timer
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start redis mgt timer ---\n");
 	Select_Timer *timer = new Select_Timer;
 	Redis_Timer_handler *conn_thandler = new Redis_Timer_handler;
@@ -67,7 +68,7 @@ int Redis_Mgt::init(const std::string &ip, const unsigned int port, const std::s
 
 void Redis_Mgt::release()
 {
-	//×îºóÊÍ·Å redisContext ¶ÔÏó    
+	//æœ€åé‡Šæ”¾ redisContext å¯¹è±¡    
 	redisFree(_redis);
 	_redis = NULL;
 	_valid = false;
@@ -85,19 +86,19 @@ void Redis_Mgt::check()
 		nRet = ping();
 		if(nRet == 0)
 		{
-			//ping ³É¹¦
+			//ping æˆåŠŸ
 			return;
 		}
 		else
 		{
-			//ping Ê§°Ü
+			//ping å¤±è´¥
 			connect();
 		}
 
 	}
 	else
 	{
-		//ÖØĞÂÁ¬½Ó
+		//é‡æ–°è¿æ¥
 		connect();
 	}
 	
@@ -110,8 +111,8 @@ int Redis_Mgt::connect()
 	int nRet = 0;
 	
 	/*
-	Á¬½Ó´´½¨ÒÔºóÄÚ²¿Éú³ÉÒ»¸ö redisContext ¶Ñ¶ÔÏó£¬Ò»µ©Á¬½Ó¶Ï¿ªĞèÒªÖØĞÂÁ¬½Ó£¬
-	Ã»ÓĞ×Ô¶¯ÖØÁ¬»úÖÆ
+	è¿æ¥åˆ›å»ºä»¥åå†…éƒ¨ç”Ÿæˆä¸€ä¸ª redisContext å †å¯¹è±¡ï¼Œä¸€æ—¦è¿æ¥æ–­å¼€éœ€è¦é‡æ–°è¿æ¥ï¼Œ
+	æ²¡æœ‰è‡ªåŠ¨é‡è¿æœºåˆ¶
 	*/
     struct timeval timeout = {0, 300000};
     _redis = redisConnectWithTimeout(_ip.c_str(), _port, timeout);
@@ -141,7 +142,7 @@ int Redis_Mgt::connect()
 		reply = (redisReply*)redisCommand(_redis, "auth %s", _auth.c_str());
 		if(!reply)
 		{
-			//Èç¹ûredis server Í£Ö¹£¬reply is null
+			//å¦‚æœredis server åœæ­¢ï¼Œreply is null
 			XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u)\n", _ip.c_str(), _port);
 			release();
 			return -1;
@@ -187,7 +188,7 @@ int Redis_Mgt::ping()
 	reply = (redisReply*)redisCommand(_redis, "ping");
 	if(!reply)
 	{
-		//Èç¹ûredis server Í£Ö¹£¬reply is null
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
 		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u)\n", 
 		_ip.c_str(), _port);
 		nRet = -2;
@@ -235,10 +236,21 @@ int Redis_Mgt::register_route(const unsigned long long id, const std::string &ac
 		return -1;
 	}
 
-    redisReply *reply = (redisReply*)redisCommand(_redis, "sadd mdp:%llu %s", id, access_svr_id.c_str());
+    redisReply *reply = (redisReply*)redisCommand(_redis, "sadd MDP:id_%llu %s", id, access_svr_id.c_str());
 	if(!reply)
 	{
-		//Èç¹ûredis server Í£Ö¹£¬reply is null
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
+		err_info = "reply is null, pls check redis server.";
+		release();
+		return -1;
+	}
+	freeReplyObject(reply);
+
+    reply = (redisReply*)redisCommand(_redis, "zadd Access_Svr:%s %llu %llu", access_svr_id.c_str(), getTimestamp(), id);
+	if(!reply)
+	{
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
 		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
 		err_info = "reply is null, pls check redis server.";
 		release();
@@ -270,10 +282,10 @@ int Redis_Mgt::unregister_route(const unsigned long long id, const std::string &
 		return -1;
 	}
 
-    redisReply *reply = (redisReply*)redisCommand(_redis, "srem mdp:%llu %s", id, access_svr_id.c_str());
+    redisReply *reply = (redisReply*)redisCommand(_redis, "srem MDP:id_%llu %s", id, access_svr_id.c_str());
 	if(!reply)
 	{
-		//Èç¹ûredis server Í£Ö¹£¬reply is null
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
 		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
 		err_info = "reply is null, pls check redis server.";
 		release();
@@ -281,11 +293,157 @@ int Redis_Mgt::unregister_route(const unsigned long long id, const std::string &
 	}
 	freeReplyObject(reply);
 
+    reply = (redisReply*)redisCommand(_redis, "zrem Access_Svr:%s %llu", access_svr_id.c_str(), id);
+	if(!reply)
+	{
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
+		err_info = "reply is null, pls check redis server.";
+		release();
+		return -1;
+	}
+	freeReplyObject(reply);
+	
 	XCP_LOGGER_INFO(&g_logger, "complete to unregister route.\n");
 
 	return nRet;
 
 }
+
+
+
+
+
+int Redis_Mgt::get_client_list(const std::string &access_svr_id, const unsigned long long begin, const unsigned int cnt, std::deque<unsigned long long> &clients, std::string &err_info)
+{
+	int bRet = false;
+
+	Thread_Mutex_Guard guard(_mutex);
+	
+	if(!_valid || !_redis)
+	{
+		XCP_LOGGER_INFO(&g_logger, "redisContext is invalid, pls check redis server(%s:%u)\n", 
+			_ip.c_str(), _port);
+		err_info = "user redis svr is disconnect.";
+		return -1;
+	}
+	
+    redisReply *reply = NULL;
+	reply = (redisReply*)redisCommand(_redis, "zrange Access_Svr:%s %llu %llu", access_svr_id.c_str(), begin, (begin+cnt-1));
+	if(!reply)
+	{
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u)\n", _ip.c_str(), _port);
+		err_info = "reply is null, pls check redis server.";
+		release();
+		return -1;
+	}
+	
+	if((reply->type == REDIS_REPLY_ARRAY) && (reply->elements > 0))
+	{
+		redisReply *reply_member = NULL;
+		for(unsigned int i=0; i<reply->elements; i++)
+		{
+			reply_member = reply->element[i];
+			if(!reply_member)
+			{
+				//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+				XCP_LOGGER_INFO(&g_logger, "reply_member is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
+				err_info = "reply is null, pls check redis server.";
+				freeReplyObject(reply);
+				release();
+				return -1;	
+			}
+			else
+			{
+				unsigned long long client_id = 0;
+				if((reply_member->type == REDIS_REPLY_STRING))
+				{
+					client_id = atoll(reply_member->str);
+				}
+				clients.push_back(client_id);
+			}
+			
+		}
+		
+	}
+
+    freeReplyObject(reply);
+
+	return bRet;
+
+}
+
+
+
+
+
+
+int Redis_Mgt::get_access_svr_list(std::set<std::string> &svrs, std::string &err_info)
+{
+
+	int bRet = false;
+
+	Thread_Mutex_Guard guard(_mutex);
+	
+	if(!_valid || !_redis)
+	{
+		XCP_LOGGER_INFO(&g_logger, "redisContext is invalid, pls check redis server(%s:%u)\n", 
+			_ip.c_str(), _port);
+		err_info = "user redis svr is disconnect.";
+		return -1;
+	}
+
+    redisReply *reply = NULL;
+	reply = (redisReply*)redisCommand(_redis, "keys Access_Svr:%s*", g_sysInfo._log_id.c_str());
+	if(!reply)
+	{
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u)\n", _ip.c_str(), _port);
+		err_info = "reply is null, pls check redis server.";
+		release();
+		return -1;
+	}
+
+	if((reply->type == REDIS_REPLY_ARRAY) && (reply->elements > 0))
+	{
+		redisReply *reply_member = NULL;
+		for(unsigned int i=0; i<reply->elements; i++)
+		{
+			reply_member = reply->element[i];
+			if(!reply_member)
+			{
+				//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+				XCP_LOGGER_INFO(&g_logger, "reply_member is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
+				err_info = "reply is null, pls check redis server.";
+				freeReplyObject(reply);
+				release();
+				return -1;	
+			}
+			else
+			{
+				std::string str = "";
+				if((reply_member->type == REDIS_REPLY_STRING))
+				{
+					str = reply_member->str;
+					if(str.empty())
+					{
+						continue;
+					}
+					svrs.insert(str);
+				}
+			}
+		}
+		
+	}
+
+    freeReplyObject(reply);
+
+	return bRet;
+
+}
+
+
 
 
 
@@ -304,15 +462,14 @@ int Redis_Mgt::get_security_channel(const std::string &id, std::string &key, std
 	}
 
     redisReply *reply = NULL;
-    reply = (redisReply*)redisCommand(_redis, "hmget %s key %s", id.c_str(), key.c_str());
+    reply = (redisReply*)redisCommand(_redis, "hmget Security:%s key %s", id.c_str(), key.c_str());
 	if(!reply)
 	{
-		//Èç¹ûredis server Í£Ö¹£¬reply is null
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
 		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
 		err_info = "reply is null, pls check redis server.";
 		release();
 		return -1;
-		
 	}
 	else
 	{
@@ -328,11 +485,81 @@ int Redis_Mgt::get_security_channel(const std::string &id, std::string &key, std
 		{
 			XCP_LOGGER_INFO(&g_logger, "the reply type of security channel id isn't array.\n");
 			err_info = "the reply type of security channel id isn't array.";
+			freeReplyObject(reply);
+			return -1;
 		}
-
 	}
 	freeReplyObject(reply);
 	
+
+	//è®¾ç½®TTL 3å¤©
+    reply = (redisReply*)redisCommand(_redis, "expire Security:%s %u", id.c_str(), SECURITY_CHANNEL_TTL);
+	if(!reply)
+	{
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
+		err_info = "reply is null, pls check redis server.";
+		release();
+		return -1;
+	}
+	else
+	{
+		if((reply->type == REDIS_REPLY_INTEGER) && (reply->integer != 1))
+		{
+			XCP_LOGGER_INFO(&g_logger, "expire security channel uuid failed, uuid:%s\n", id.c_str());
+			err_info = "expire security channel uuid failed.";
+			freeReplyObject(reply);
+			return -1;
+		}
+	}
+	freeReplyObject(reply);
+	
+	return nRet;
+
+}
+
+
+
+
+
+int Redis_Mgt::check_client_online(const unsigned long long client_id, std::string &err_info)
+{
+	int nRet = 0;
+	err_info = "client_id is online.";
+
+	Thread_Mutex_Guard guard(_mutex);
+	
+	if(!_valid || !_redis)
+	{
+		XCP_LOGGER_INFO(&g_logger, "redisContext is invalid, pls check redis server(%s:%u)\n", 
+			_ip.c_str(), _port);
+		err_info = "user redis svr is disconnect.";
+		return -1;
+	}
+
+	//åˆ¤æ–­è¯¥ç”¨æˆ· æ˜¯å¦åœ¨çº¿
+    redisReply *reply = (redisReply*)redisCommand(_redis, "exists MDP:id_%llu", client_id);
+	if(!reply)
+	{
+		//å¦‚æœredis server åœæ­¢ï¼Œreply is null
+		XCP_LOGGER_INFO(&g_logger, "reply is null, pls check redis server(%s:%u).\n", _ip.c_str(), _port);
+		err_info = "reply is null, pls check redis server.";
+		release();
+		return -1;
+		
+	}
+	else
+	{
+		if((reply->type == REDIS_REPLY_INTEGER) && (reply->integer != 1))
+		{
+			XCP_LOGGER_INFO(&g_logger, "the client(%llu) isn't online.", client_id);
+			err_info = "the client isn't online.";
+			freeReplyObject(reply);
+			return -1;
+		}
+    }
+	freeReplyObject(reply);
+
 	return nRet;
 
 }

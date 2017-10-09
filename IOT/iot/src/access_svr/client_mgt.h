@@ -31,6 +31,12 @@
 
 USING_NS_BASE;
 
+/*
+会话结构体Session 是在创建连接后就生成
+客户端结构体StClient 在登录验证成功后才生成
+会话在前客户端在后
+会话和客户端是1:(0|1)的关系
+*/
 
 class Client_Mgt
 {
@@ -39,20 +45,33 @@ public:
 
 	~Client_Mgt();
 
-	void register_client(const StClient stClient);
+	int register_client(const StClient stClient, std::string &err_info);
 
-	void unregister_client(int fd);
+	//void unregister_client(int fd, const std::string &status=US_OFFLINE);
+	void unregister_client(const std::string &session_id, const std::string &status=US_OFFLINE);
+
+	//判断该链接是否已经登录验证过
+	//bool is_auth(int fd);
+	bool is_auth(const std::string &session_id);
+
+	bool get_clients(unsigned long long id, std::map<std::string, StClient> &clients, std::string &err_info);
+
+	void get_all_app(std::map<unsigned long long, std::map<std::string, StClient> > &apps);
+
+	void get_all_router(std::map<unsigned long long, std::map<std::string, StClient> > &routers);
 	
 	unsigned int client_num();
 		
 private:
 	Thread_Mutex _mutex;
 
-	//app id | router id  --- fd list
-	std::map<unsigned long long, std::set<int> > _ids;
+	//app id   --- (session id --- client)
+	std::map<unsigned long long, std::map<std::string, StClient> > _apps;
+	//router id  --- (session id --- client)
+	std::map<unsigned long long, std::map<std::string, StClient> > _routers;
 	
-	//fd --- client
-	std::map<int, StClient> _fds;
+	//session id --- client
+	std::map<std::string, StClient> _clients;
 	
 };
 

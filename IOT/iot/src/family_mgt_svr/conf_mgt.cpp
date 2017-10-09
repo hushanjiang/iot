@@ -14,6 +14,7 @@
 extern Logger g_logger;
 extern StSysInfo g_sysInfo;
 extern mysql_mgt g_mysql_mgt;
+extern redis_mgt g_redis_mgt;
 
 extern Conn_Mgt_LB g_conf_mgt_conn;
 extern Conn_Mgt_LB g_uid_conn;
@@ -43,7 +44,7 @@ int Conf_Mgt::init(const std::string &cfg)
 		return nRet;
 	}
 
-	//³õÊ¼»¯TCP Á¬½Ó¹ÜÀí
+	//Â³ÃµÃŠÂ¼Â»Â¯TCP ÃÂ¬Â½Ã“Â¹ÃœÃ€Ã­
 	nRet = init_conn_mgt();
 	if(nRet != 0)
 	{	
@@ -51,7 +52,7 @@ int Conf_Mgt::init(const std::string &cfg)
 		return nRet;
 	}
 
-	//Æô¶¯conf mgt  timer
+	//Ã†Ã´Â¶Â¯conf mgt  timer
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start conf mgt timer ---\n");
 	Select_Timer *timer_req = new Select_Timer;
 	Conf_Timer_handler *conf_thandler = new Conf_Timer_handler;
@@ -87,13 +88,15 @@ int Conf_Mgt::init(const std::string &cfg)
 	}
 
 	//redis
-	nRet = PSGT_Redis_Mgt->init(_redises[0]._ip, _redises[0]._port, _redises[0]._auth);
-	if(nRet != 0)
+	nRet = g_redis_mgt.init(_redises[0]._ip, _redises[0]._port, _redises[0]._auth, _redises[0]._num);
+	if (nRet != 0)
 	{
-		printf("init redis failed, ret:%d\n", nRet);
+		printf("init redis_mgt write failed, ret:%d\n", nRet);
 		return nRet;
 	}
-	
+	else {
+		printf("init redis_mgt success!\n");
+	}
 	return nRet;
 	
 }
@@ -101,7 +104,7 @@ int Conf_Mgt::init(const std::string &cfg)
 
 
 
-//³õÊ¼»¯ËùÓĞµÄ³¤Á¬½Ó³Ø
+//Â³ÃµÃŠÂ¼Â»Â¯Ã‹Ã¹Ã“ÃÂµÃ„Â³Â¤ÃÂ¬Â½Ã“Â³Ã˜
 int Conf_Mgt::init_conn_mgt()
 {
 	int nRet = 0;
@@ -211,7 +214,7 @@ int Conf_Mgt::refresh()
 		}
 	}
 	
-	//Message IDÃüÃû¹æÔò£º [svr id]_[ip]_[port]
+	//Message IDÃƒÃ¼ÃƒÃ»Â¹Ã¦Ã”Ã²Â£Âº [svr id]_[ip]_[port]
 	sysInfo._new_id = format("%s_%s_%u", sysInfo._id.c_str(), sysInfo._ip.c_str(), sysInfo._port);
 	
 	//thr_num
@@ -393,12 +396,14 @@ int Conf_Mgt::refresh()
 			return -1;
 		}
 
-		stMysql_Access._num = (unsigned int)atoll(vecNode[i].get_attr_str("num").c_str());
+		/**stMysql_Access._num = (unsigned int)atoll(vecNode[i].get_attr_str("num").c_str());
 		if(stMysql_Access._num == 0)
 		{
 			printf("mysql svr num is 0\n");
 			return -1;
-		}
+		}**/
+		//è¿æ¥æ± çš„é•¿åº¦= çº¿ç¨‹æ•°+3
+		stMysql_Access._num = sysInfo._thr_num + EXTRA_CONNCTION_POOL_NUM;
 		mysqls[mode] = stMysql_Access;
 		
 	}
@@ -458,6 +463,10 @@ int Conf_Mgt::refresh()
 			printf("redis svr auth is empty\n");
 			return -1;
 		}
+
+		//stRedis_Access._num = (unsigned short)atoll(vecNode[i].get_attr_str("num").c_str());
+		//è¿æ¥æ± çš„é•¿åº¦= çº¿ç¨‹æ•°+3
+		stRedis_Access._num = sysInfo._thr_num + EXTRA_CONNCTION_POOL_NUM;
 		redises.push_back(stRedis_Access);
 		
 	}
@@ -551,7 +560,7 @@ int Conf_Mgt::update_svr()
 
 
 
-//»ñÈ¡¸±±¾
+//è·å–å‰¯æœ¬
 StSysInfo Conf_Mgt::get_sysinfo()
 {
 	Thread_Mutex_Guard guard(_mutex);

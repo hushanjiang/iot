@@ -44,7 +44,7 @@ public:
 
 	int update_svr();
 
-	//获取本地配置文件
+	//鑾峰彇鏈湴閰嶇疆鏂囦欢
 	StSysInfo get_sysinfo();
 
 	std::vector<StSvr> get_conf_svr();
@@ -58,6 +58,7 @@ private:
 	std::vector<StSvr> _conf_svr;
 	std::vector<StRedis_Access> _redises;
 	std::map<std::string, StMysql_Access> _mysqls;
+	std::vector<StMongo_Access> _mongos;
 
 	Thread_Mutex _mutex_svr;
 	std::map<std::string, std::vector<StSvr> > _svrs;

@@ -9,6 +9,7 @@
 
 extern Logger g_logger;
 
+
 //--------------- conn mgt ----------------
 Conn_Mgt_LB g_lb_conn;
 Conn_Mgt_LB g_conf_mgt_conn;
@@ -16,9 +17,10 @@ Conn_Mgt_LB g_user_mgt_conn;
 Conn_Mgt_LB g_device_mgt_conn;
 Conn_Mgt_LB g_family_mgt_conn;
 Conn_Mgt_LB g_mdp_conn;
+Conn_Mgt_LB g_push_conn;
 
 
-Conn_Mgt_LB::Conn_Mgt_LB(): _index(0), _out_ip(false)
+Conn_Mgt_LB::Conn_Mgt_LB(): _index(0), _handler(NULL), _asyn(false), _svr_type(ST_BUSINESS)
 {
 
 }
@@ -32,19 +34,17 @@ Conn_Mgt_LB::~Conn_Mgt_LB()
 
 
 
-
-//³õÊ¼»¯³¤Á¬½Ó³Ø
-int Conn_Mgt_LB::init(std::vector<StSvr> *svrs, Event_Handler *handler, bool asyn, bool do_register)
+int Conn_Mgt_LB::init(std::vector<StSvr> *svrs, Event_Handler *handler, bool asyn, const std::string &svr_type)
 {
 	int nRet = 0;
 
 	_handler = handler;
 	_asyn = asyn;
-	_do_register = do_register;
+	_svr_type = svr_type;
 
 	refresh(svrs);
 
-	//Æô¶¯conn mgt  timer£¬5ÃëÖÓ¾Í¿ÉÒÔ¼ì²â¶Ô¶Ë·şÎñÊÇ·ñÖØĞÂÆô¶¯
+	//å¯åŠ¨conn mgt  timerï¼Œ5ç§’é’Ÿå°±å¯ä»¥æ£€æµ‹å¯¹ç«¯æœåŠ¡æ˜¯å¦é‡æ–°å¯åŠ¨
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start conn mgt lb timer ---\n");
 	Select_Timer *timer_req = new Select_Timer;
 	Conn_Timer_handler *conn_thandler = new Conn_Timer_handler;
@@ -72,9 +72,8 @@ int Conn_Mgt_LB::init(std::vector<StSvr> *svrs, Event_Handler *handler, bool asy
 	XCP_LOGGER_INFO(&g_logger, "=== complete to start conn mgt lb timer ===\n");
 	
 	return 0;
-	
-}
 
+}
 
 
 
@@ -83,7 +82,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 {
 	Thread_Mutex_Guard guard(_mutex);
 	
-	//ÊÍ·ÅÔ­À´Á¬½Ó³ØÖĞµÄÎŞĞ§Á´½Ó
+	//é‡Šæ”¾åŸæ¥è¿æ¥æ± ä¸­çš„æ— æ•ˆé“¾æ¥
 	std::vector<Conn_Ptr>::iterator itr = _conns.begin();
 	for(; itr != _conns.end();)
 	{
@@ -98,7 +97,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 			}
 		}
 
-		//¶ÔÓÚÎŞĞ§µÄconn¹Ø±ÕºÍÊÍ·Å
+		//å¯¹äºæ— æ•ˆçš„connå…³é—­å’Œé‡Šæ”¾
 		if(!found)
 		{
 			std::string id = format("%s_%u", (*itr)->_svr._ip.c_str(), (*itr)->_svr._port);
@@ -106,7 +105,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 			printf("**** release useless conn(%s) ****\n", id.c_str());
 			
 			(*itr)->close();
-			_conns.erase(itr); //µ÷ÓÃConnÎö¹¹º¯Êı
+			_conns.erase(itr); //è°ƒç”¨Connææ„å‡½æ•°
 		}
 		else
 		{
@@ -116,7 +115,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 	}
 	
 		
-	//´´½¨ĞÂÁ´½Ó
+	//åˆ›å»ºæ–°é“¾æ¥
 	for(unsigned int i=0; i<svrs->size(); i++)
 	{
 		bool found = false;
@@ -141,7 +140,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 			Conn_Ptr conn = new Conn((*svrs)[i], _handler, _asyn);
 			conn->connect();
 			
-			//ĞÂÁ´½Ó×·¼ÓÔÚºóÃæ
+			//æ–°é“¾æ¥è¿½åŠ åœ¨åé¢
 			_conns.push_back(conn);
 		}
 		
@@ -156,14 +155,23 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 
 void Conn_Mgt_LB::check()
 {
-	if(_do_register)
-	{
-		check_hb();
-	}
-	else
+	if(_svr_type == ST_BUSINESS)
 	{
 		check_conn();
 	}
+	else if(_svr_type == ST_LB)
+	{
+		check_lb_conn();
+	}
+	else if(_svr_type == ST_MDP)
+	{
+		check_mdp_conn();
+	}
+	else
+	{
+		//no-todo
+	}
+	
 }
 
 
@@ -183,9 +191,7 @@ void Conn_Mgt_LB::check_conn()
 
 
 
-
-//Í¨¹ıhb ¼ì²éËùÓĞ³¤Á¬½Ó
-void Conn_Mgt_LB::check_hb()
+void Conn_Mgt_LB::check_mdp_conn()
 {
 	int nRet = 0;
 	
@@ -196,29 +202,19 @@ void Conn_Mgt_LB::check_hb()
 	{
 		if((*itr)->is_close())
 		{
-			//Á¬½Ó
+			//è¿æ¥
 			(*itr)->connect();	
 		}
 		else
 		{
-			//Èç¹ûÒÑ¾­×¢²á¾Í·¢hb
-			if((*itr)->_registered)
+			//å¦‚æœå·²ç»æ³¨å†Œå°±å‘hb
+			if(!((*itr)->_registered))
 			{
-				//ĞÄÌø
-				nRet = (*itr)->hb();
+				//æ³¨å†Œåˆ°mdp
+				nRet = (*itr)->register_mdp();
 				if(nRet != 0)
 				{
-					//ĞÄÌøÊ§°Ü¾Í¹Ø±ÕÁ¬½Ó£¬×¼±¸ÖØĞÂÁ¬½Ó
-					(*itr)->close();
-				}			
-			}
-			else
-			{
-				//×¢²áworker
-				nRet = (*itr)->register_worker(_out_ip);
-				if(nRet != 0)
-				{
-					//×¢²áÊ§°Ü¹Ø±ÕÁ¬½Ó£¬×¼±¸ÖØĞÂÁ¬½Ó
+					//æ³¨å†Œå¤±è´¥å…³é—­è¿æ¥ï¼Œå‡†å¤‡é‡æ–°è¿æ¥
 					(*itr)->close();
 				}
 			}
@@ -230,6 +226,50 @@ void Conn_Mgt_LB::check_hb()
 }
 
 
+
+void Conn_Mgt_LB::check_lb_conn()
+{
+	int nRet = 0;
+	
+	Thread_Mutex_Guard guard(_mutex);
+	
+	std::vector<Conn_Ptr>::iterator itr = _conns.begin();
+	for(; itr != _conns.end(); itr++)
+	{
+		if((*itr)->is_close())
+		{
+			//è¿æ¥
+			(*itr)->connect();	
+		}
+		else
+		{
+			//å¦‚æœå·²ç»æ³¨å†Œå°±å‘hb
+			if((*itr)->_registered)
+			{
+				//å¿ƒè·³
+				nRet = (*itr)->hb_lb();
+				if(nRet != 0)
+				{
+					//å¿ƒè·³å¤±è´¥å°±å…³é—­è¿æ¥ï¼Œå‡†å¤‡é‡æ–°è¿æ¥
+					(*itr)->close();
+				}			
+			}
+			else
+			{
+				//æ³¨å†Œworker
+				nRet = (*itr)->register_lb();
+				if(nRet != 0)
+				{
+					//æ³¨å†Œå¤±è´¥å…³é—­è¿æ¥ï¼Œå‡†å¤‡é‡æ–°è¿æ¥
+					(*itr)->close();
+				}
+			}
+			
+		}
+		
+	}
+
+}
 
 
 

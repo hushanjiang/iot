@@ -31,7 +31,7 @@ USING_NS_BASE;
 
 
 /*
-RSP_TCP_Event_Handler ÓÃÓÚ½ÓÊÕ´¦Àí³¤Á¬½Ó¿Í»§¶ËµÄÏìÓ¦
+RSP_TCP_Event_Handler ç”¨äºæ¥æ”¶å¤„ç†é•¿è¿æ¥å®¢æˆ·ç«¯çš„å“åº”
 */
 
 class RSP_TCP_Event_Handler : public Event_Handler
@@ -41,17 +41,17 @@ public:
 
 	virtual ~RSP_TCP_Event_Handler();
 
-	//handle_xxxx ³É¹¦·µ»Ø0£¬Ê§°Ü·µ»Ø·Ç0
+	//handle_xxxx æˆåŠŸè¿”å›0ï¼Œå¤±è´¥è¿”å›é0
 	
 
-	//´¦Àí¶ÁÊÂ¼ş
+	//å¤„ç†è¯»äº‹ä»¶
 	virtual int handle_input(int fd);
 
-	//´¦ÀíÁ¬½Ó¹Ø±ÕÊÂ¼ş
+	//å¤„ç†è¿æ¥å…³é—­äº‹ä»¶
 	virtual int handle_close(int fd);
 
 	/*
-	Õâ¸ö½Ó¿Ú×ÓÀà±ØĞëÊµÏÖ, ÑùÀıÈçÏÂ:
+	è¿™ä¸ªæ¥å£å­ç±»å¿…é¡»å®ç°, æ ·ä¾‹å¦‚ä¸‹:
 	virtual Event_Handler* renew(){return new Event_Handler;};
 	*/
 	virtual Event_Handler* renew();

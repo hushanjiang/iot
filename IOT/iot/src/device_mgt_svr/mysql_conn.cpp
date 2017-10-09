@@ -258,11 +258,11 @@ int mysql_conn::connect_conn(const std::string &ip, unsigned int port,
 		return -1;
 	}
 
-	//ÉèÖÃÁ´½Ó³¬Ê±Ê±¼ä
+	//è®¾ç½®é“¾æ¥è¶…æ—¶æ—¶é—´
 	unsigned char conn_timeout = 5;
 	mysql_options(_mysql, MYSQL_OPT_CONNECT_TIMEOUT, (char*)&conn_timeout);
 
-	//ÉèÖÃ¶ÁĞ´³¬Ê±Ê±¼ä
+	//è®¾ç½®è¯»å†™è¶…æ—¶æ—¶é—´
     unsigned int read_timeout = 5; 
 	unsigned int write_timeout = 5;
 	mysql_options(_mysql, MYSQL_OPT_READ_TIMEOUT, (const char *)&read_timeout);    
@@ -291,7 +291,7 @@ int mysql_conn::connect_conn(const std::string &ip, unsigned int port,
 	}
 			              
 
-	//ÉèÖÃÁ¬½ÓÓïÑÔ¼¯
+	//è®¾ç½®è¿æ¥è¯­è¨€é›†
 	if(chars != "")
 	{
 		if(mysql_set_character_set(_mysql, chars.c_str()))
@@ -320,13 +320,13 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 	if(!_conn)
 	{
 		XCP_LOGGER_ERROR(&g_logger, "the mysql is not connected.\n");
-		return -1;
+		return ERR_GET_MYSQL_CONN_FAILED;
 	}
 	
 	if(sql.empty())
 	{
 		XCP_LOGGER_ERROR(&g_logger, "the sql is empty.\n");
-		return -2;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 	
 	XCP_LOGGER_INFO(&g_logger, "excute sql command:%s.\n", sql.c_str());
@@ -335,7 +335,7 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 	{
 		XCP_LOGGER_ERROR(&g_logger, "mysql_real_query failed, sql:%s, ret:%d, err code:%d, err msg:%s\n", 
 			sql.c_str(), nRet, mysql_errno(_mysql), mysql_error(_mysql));
-		return -3;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	//printf("mysql_real_query success, sql:%s\n", sql.c_str());
@@ -347,7 +347,7 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 		XCP_LOGGER_ERROR(&g_logger, "mysql_store_result failed, sql:%s, err code:%d, err msg:%s\n", 
 			sql.c_str(), mysql_errno(_mysql), mysql_error(_mysql));	
 		
-		return -4;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	int num_field = mysql_num_fields(pRes);
@@ -365,7 +365,7 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 		return 0;
 	}
 
-	//»ñÈ¡²éÑ¯½á¹û×Ö¶ÎÃûÁĞ±í
+	//è·å–æŸ¥è¯¢ç»“æœå­—æ®µååˆ—è¡¨
 	MYSQL_FIELD *fields = NULL;
 	fields = mysql_fetch_fields(pRes);
 	for(int i = 0; i<num_field; i++)
@@ -374,7 +374,7 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 	}
 
 	
-	//MYSQL_ROWÊÇÔÚMYSQL_RESµÄ»ù´¡ÉÏ²Ù×÷ËùÒÔÃ»ÓĞÄÚ´æÊÍ·ÅµÄÎÊÌâ
+	//MYSQL_ROWæ˜¯åœ¨MYSQL_RESçš„åŸºç¡€ä¸Šæ“ä½œæ‰€ä»¥æ²¡æœ‰å†…å­˜é‡Šæ”¾çš„é—®é¢˜
 	MYSQL_ROW ppRow = NULL;
 	while ((ppRow = mysql_fetch_row(pRes)) != NULL)
 	{
@@ -382,8 +382,8 @@ int mysql_conn::query_sql(const std::string sql, MySQL_Row_Set &row_set)
 		for (int i=0; i<num_field; i++)
 		{
 			/*
-			Èç¹ûÊı¾İ±í×Ö¶ÎÖµÎªNULL£¬Í¨¹ıMYSQL_ROW »ñÈ¡µ½¶ÔÓ¦×Ö¶ÎÖµÒ²Îª
-			NULL£¬Õâ¸öµØ·½¿ª·¢ĞèÒªÅĞ¶Ï£¬ ·ÀÖ¹crash
+			å¦‚æœæ•°æ®è¡¨å­—æ®µå€¼ä¸ºNULLï¼Œé€šè¿‡MYSQL_ROW è·å–åˆ°å¯¹åº”å­—æ®µå€¼ä¹Ÿä¸º
+			NULLï¼Œè¿™ä¸ªåœ°æ–¹å¼€å‘éœ€è¦åˆ¤æ–­ï¼Œ é˜²æ­¢crash
 			*/
 			if(ppRow[i] == NULL)
 			{
@@ -418,13 +418,13 @@ int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_inse
 	if(!_conn)
 	{
 		XCP_LOGGER_ERROR(&g_logger, "the mysql is not connected.\n");
-		return -1;
+		return ERR_GET_MYSQL_CONN_FAILED;
 	}
 	
 	if(sql.empty())
 	{
 		XCP_LOGGER_INFO(&g_logger, "the sql is empty.\n");
-		return -2;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	XCP_LOGGER_INFO(&g_logger, "excute sql command:%s.\n", sql.c_str());
@@ -444,22 +444,22 @@ int mysql_conn::execute_sql(const std::string sql, unsigned long long &last_inse
 			return ERR_TABLE_EXISTS;
 		}
 		
-		return -3;
+		return ERR_MYSQL_OPER_EXCEPTION;
 	}
 
 	//printf("exec sql success, sql:%s\n", sql.c_str());
 	
 	
-	//·µ»ØÓÉÒÔÇ°µÄINSERT»òUPDATEÓï¾äÎªAUTO_INCREMENTÁĞÉú³ÉµÄÖµ
+	//è¿”å›ç”±ä»¥å‰çš„INSERTæˆ–UPDATEè¯­å¥ä¸ºAUTO_INCREMENTåˆ—ç”Ÿæˆçš„å€¼
 	last_insert_id = (unsigned long long)mysql_insert_id(_mysql);
 	
 	/*
-	·µ»ØÉÏ´ÎUPDATE¸ü¸ÄµÄĞĞÊı£¬ÉÏ´ÎDELETE É¾³ıµÄĞĞÊı£¬
-	»òÉÏ´ÎINSERTÓï¾ä²åÈëµÄĞĞÊı
+	è¿”å›ä¸Šæ¬¡UPDATEæ›´æ”¹çš„è¡Œæ•°ï¼Œä¸Šæ¬¡DELETE åˆ é™¤çš„è¡Œæ•°ï¼Œ
+	æˆ–ä¸Šæ¬¡INSERTè¯­å¥æ’å…¥çš„è¡Œæ•°
 	*/
 	affected_rows = (unsigned long long)mysql_affected_rows(_mysql);
 
-	//°ÑÖ´ĞĞ¶àÌõsqlÓï¾ä·µ»ØµÄ¶à¸ö½á¹û¼¯ÇåÀíµô£¬ÎªºóÃæÖ´ĞĞsql×¼±¸
+	//æŠŠæ‰§è¡Œå¤šæ¡sqlè¯­å¥è¿”å›çš„å¤šä¸ªç»“æœé›†æ¸…ç†æ‰ï¼Œä¸ºåé¢æ‰§è¡Œsqlå‡†å¤‡
 	MYSQL_RES* pRes = NULL;
 	do
 	{
@@ -486,7 +486,7 @@ unsigned long mysql_conn::escape_string(char *to, const char *from, unsigned lon
 	/*
 	unsigned long mysql_real_escape_string(MYSQL *mysql, char *to, const char *from, unsigned long length)
 	The string pointed to by from must be length bytes long. You must allocate the to buffer to be at least length*2+1 bytes long. 
-	·µ»ØÖµ: The length of the value placed into to, not including the terminating null character.
+	è¿”å›å€¼: The length of the value placed into to, not including the terminating null character.
 	*/
 	return mysql_real_escape_string(_mysql, to, from, length);
 }
@@ -498,7 +498,7 @@ void mysql_conn::release_conn()
 {
 	if(_conn)
 	{
-		//mysql_close ÊÇ¹Ø±Õ±¾¶Ë£¬m_pMySQLÎŞĞ§£¬¶ÔÎŞĞ§µÄm_pMySQL ²Ù×÷¶¼»ácrash
+		//mysql_close æ˜¯å…³é—­æœ¬ç«¯ï¼Œm_pMySQLæ— æ•ˆï¼Œå¯¹æ— æ•ˆçš„m_pMySQL æ“ä½œéƒ½ä¼šcrash
 		mysql_close(_mysql);
 		_conn = false;
 	}
@@ -511,14 +511,14 @@ void mysql_conn::release_conn()
 
 
 
-//Í¨¹ıping ¶Ômysql ³¤Á¬½Ó½øĞĞ¼ì²é
+//é€šè¿‡ping å¯¹mysql é•¿è¿æ¥è¿›è¡Œæ£€æŸ¥
 bool mysql_conn::ping()
 {	
 	/*
-	mysql_ping ´¦ÀíµÄÊÇmysql server ¼ì²âµ½Ä³¸öÁ¬½ÓÓÉÓÚ³¤ÆÚÃ»ÓĞÊ¹ÓÃ£¬
-	mysql server »áÔÚ³¬Ê±ºó×Ô¶¯¹Ø±Õ¸ÃÁ¬½Ó£¬Ê¹ÓÃmysql_pingÄÜ¹»
-	¼ì²âmysql server ¶ËÒÑ¾­¹Ø±Õ£¬ ×Ô¶¯Ê¹ÓÃÔ­À´µÄÁ¬½Ó²ÎÊıÖØĞÂÁ¬½Ó¡£
-	Èç¹ûmysql_close ºóÔÙµ÷ÓÃ mysql_ping »ácrash
+	mysql_ping å¤„ç†çš„æ˜¯mysql server æ£€æµ‹åˆ°æŸä¸ªè¿æ¥ç”±äºé•¿æœŸæ²¡æœ‰ä½¿ç”¨ï¼Œ
+	mysql server ä¼šåœ¨è¶…æ—¶åè‡ªåŠ¨å…³é—­è¯¥è¿æ¥ï¼Œä½¿ç”¨mysql_pingèƒ½å¤Ÿ
+	æ£€æµ‹mysql server ç«¯å·²ç»å…³é—­ï¼Œ è‡ªåŠ¨ä½¿ç”¨åŸæ¥çš„è¿æ¥å‚æ•°é‡æ–°è¿æ¥ã€‚
+	å¦‚æœmysql_close åå†è°ƒç”¨ mysql_ping ä¼šcrash
 	*/
 	int nRet = mysql_ping(_mysql);
 	if(nRet != 0)
@@ -530,7 +530,7 @@ bool mysql_conn::ping()
 				
 		_conn = false;
 
-		//Èç¹ûmysql Á¬½ÓÊ§°ÜÁË£¬ Ö®Ç°ÒÑ¾­Ê¹ÓÃµÄconn ½«±»ÉèÖÃÎªÃ»ÔÚÊ¹ÓÃ×´Ì¬
+		//å¦‚æœmysql è¿æ¥å¤±è´¥äº†ï¼Œ ä¹‹å‰å·²ç»ä½¿ç”¨çš„conn å°†è¢«è®¾ç½®ä¸ºæ²¡åœ¨ä½¿ç”¨çŠ¶æ€
 		if(_used)
 		{
 			_used = false;
@@ -557,7 +557,7 @@ int mysql_conn::autocommit(bool open)
 		return -1;
 	}
 
-	//1±íÊ¾Æô¶¯autocommitÄ£Ê½£»0±íÊ¾½ûÖ¹autocommitÄ£Ê½
+	//1è¡¨ç¤ºå¯åŠ¨autocommitæ¨¡å¼ï¼›0è¡¨ç¤ºç¦æ­¢autocommitæ¨¡å¼
 	nRet = mysql_autocommit(_mysql, (open? 1: 0));
 	if (0 != nRet)
 	{

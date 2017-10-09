@@ -51,10 +51,16 @@ public:
 
 	int unregister_route(const unsigned long long id, const std::string &access_svr_id, std::string &err_info);
 
+	int get_client_list(const std::string &access_svr_id, const unsigned long long begin, const unsigned int cnt, std::deque<unsigned long long> &clients, std::string &err_info);
+
+	int get_access_svr_list(std::set<std::string> &svrs, std::string &err_info);
+	
 	int get_security_channel(const std::string &id, std::string &key, std::string &err_info);	
 
+	int check_client_online(const unsigned long long client_id, std::string &err_info);
+
 private:
-	redisContext *_redis;  //ĞèÒªÈ·ÈÏÊÇ·ñÊÇÏß³Ì°²È«µÄ
+	redisContext *_redis;  //éœ€è¦ç¡®è®¤æ˜¯å¦æ˜¯çº¿ç¨‹å®‰å…¨çš„
 	Thread_Mutex _mutex;
 	bool _valid;
 	std::string _ip;

@@ -102,7 +102,7 @@ int XProtocol::req_head(const std::string &req, std::string &method, unsigned lo
 		msg_tag = json_object_get_string(_msg_tag);
 	}
 
-	//释放内存
+	//閲婃斁鍐呭瓨
 	json_object_put(root);
 	
 	return 0;
@@ -195,7 +195,7 @@ int XProtocol::get_server_access_req(const std::string &req, std::string &svr_na
 		
 	}
 
-	//释放内存
+	//閲婃斁鍐呭瓨
 	json_object_put(root);
 	
 	return 0;
@@ -247,4 +247,25 @@ std::string XProtocol::get_server_access_rsp(const std::map<std::string, std::ve
 
 }
 
+std::string XProtocol::get_sys_config_result(std::map<std::string, int> configs)
+{
+	std::ostringstream result;
+	result<<"{";
+
+	bool isFirstElement = true;
+	std::map<std::string, int>::iterator iter;
+	std::map<std::string, int>::iterator end = configs.end();
+	for(iter = configs.begin(); iter != end; iter++)
+	{
+		if(!isFirstElement)
+		{
+			result << ",";
+		}
+		result << "\"" << iter->first << "\": " << iter->second;
+		isFirstElement = false;
+	}
+	result<<"}";
+
+	return result.str();
+}
 

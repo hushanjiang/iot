@@ -10,9 +10,9 @@ extern Logger g_logger;
 
 Thread_Mutex Msg_Oper::_mutex_msg;
 
-
-int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string &method, const unsigned int req_id, const std::string &msg_tag,  
-		const int code, const std::string &msg, const std::string &body, bool is_object)
+int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string &uuid, const std::string &encry, const std::string &key, 
+	const std::string &method, const unsigned int req_id, const std::string &msg_tag,  
+	const int code, const std::string &msg, const std::string &body, bool is_object)
 {
 	int nRet = 0;
 
@@ -25,7 +25,7 @@ int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string 
 		}
 	}
 
-	std::string buf = XProtocol::rsp_msg(method, req_id, msg_tag, code, msg, body, is_object);
+	std::string buf = XProtocol::rsp_msg(uuid, encry, key, method, req_id, msg_tag, code, msg, body, is_object);
 	unsigned int len = buf.size();
 	{
 		Thread_Mutex_Guard guard(_mutex_msg);
@@ -53,7 +53,8 @@ int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string 
 
 
 
-int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string &buf)
+int Msg_Oper::send_msg(int fd, const std::string &session_id, 
+	const std::string &uuid, const std::string &encry, const std::string &key, const std::string &buf)
 {
 	int nRet = 0;
 
@@ -65,8 +66,8 @@ int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string 
 			return -1;
 		}
 	}
-	
-	std::string new_req = buf + std::string("\n");
+
+	std::string new_req = XProtocol::rsp_msg(uuid, encry, key, buf);
 	unsigned int len = new_req.size();
 	{
 		Thread_Mutex_Guard guard(_mutex_msg);
@@ -75,7 +76,7 @@ int Msg_Oper::send_msg(int fd, const std::string &session_id, const std::string 
 
 	if(nRet == 0)
 	{
-		//XCP_LOGGER_INFO(&g_logger, "send msg success. fd:%d, buf(%u):%s\n", fd, buf.size(), buf.c_str());
+		XCP_LOGGER_INFO(&g_logger, "send msg success. fd:%d, buf(%u):%s\n", fd, buf.size(), buf.c_str());
 	}
 	else if(nRet == 2)
 	{

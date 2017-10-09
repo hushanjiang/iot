@@ -13,6 +13,7 @@ extern Logger g_logger;
 
 Conn_Mgt_LB g_conf_mgt_conn;
 Conn_Mgt_LB g_uid_conn;
+Conn_Mgt_LB g_push_conn;
 
 
 Conn_Mgt_LB::Conn_Mgt_LB(): _index(0)
@@ -30,7 +31,7 @@ Conn_Mgt_LB::~Conn_Mgt_LB()
 
 
 
-//³õÊ¼»¯³¤Á¬½Ó³Ø
+//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½
 int Conn_Mgt_LB::init(std::vector<StSvr> *svrs, Event_Handler *handler, bool asyn, bool do_register)
 {
 	int nRet = 0;
@@ -41,7 +42,7 @@ int Conn_Mgt_LB::init(std::vector<StSvr> *svrs, Event_Handler *handler, bool asy
 
 	refresh(svrs);
 
-	//Æô¶¯conn mgt  timer£¬5ÃëÖÓ¾Í¿ÉÒÔ¼ì²â¶Ô¶Ë·þÎñÊÇ·ñÖØÐÂÆô¶¯
+	//ï¿½ï¿½conn mgt  timerï¿½ï¿½5ï¿½ï¿½ï¿½Ó¾Í¿ï¿½ï¿½Ô¼ï¿½ï¿½Ô¶Ë·ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start conn mgt lb timer ---\n");
 	Select_Timer *timer_req = new Select_Timer;
 	Conn_Timer_handler *conn_thandler = new Conn_Timer_handler;
@@ -80,7 +81,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 {
 	Thread_Mutex_Guard guard(_mutex);
 	
-	//ÊÍ·ÅÔ­À´Á¬½Ó³ØÖÐµÄÎÞÐ§Á´½Ó
+	//ï¿½Í·ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½Ðµï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
 	std::vector<Conn_Ptr>::iterator itr = _conns.begin();
 	for(; itr != _conns.end();)
 	{
@@ -95,7 +96,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 			}
 		}
 
-		//¶ÔÓÚÎÞÐ§µÄconn¹Ø±ÕºÍÊÍ·Å
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½connï¿½Ø±Õºï¿½ï¿½Í·ï¿½
 		if(!found)
 		{
 			std::string id = format("%s_%u", (*itr)->_svr._ip.c_str(), (*itr)->_svr._port);
@@ -103,7 +104,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 			printf("**** release useless conn(%s) ****\n", id.c_str());
 			
 			(*itr)->close();
-			_conns.erase(itr); //µ÷ÓÃConnÎö¹¹º¯Êý
+			_conns.erase(itr); //ï¿½ï¿½ï¿½ï¿½Connï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		}
 		else
 		{
@@ -113,7 +114,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 	}
 	
 		
-	//´´½¨ÐÂÁ´½Ó
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	for(unsigned int i=0; i<svrs->size(); i++)
 	{
 		bool found = false;
@@ -138,7 +139,7 @@ void Conn_Mgt_LB::refresh(std::vector<StSvr> *svrs)
 			Conn_Ptr conn = new Conn((*svrs)[i], _handler, _asyn);
 			conn->connect();
 			
-			//ÐÂÁ´½Ó×·¼ÓÔÚºóÃæ
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½
 			_conns.push_back(conn);
 		}
 		
@@ -187,14 +188,29 @@ bool Conn_Mgt_LB::get_conn(Conn_Ptr &conn)
 		_index = 0;
 	}
 	
-	for(; _index<_conns.size(); _index++)
+	unsigned int tag = _index;
+	do
 	{
 		conn = _conns[_index];
+		++_index;
 		if(!conn->is_close())
 		{
+			XCP_LOGGER_ERROR(&g_logger, "get (%s:%u) conn success, index:%u, total:%u\n", 
+				conn->_svr._ip.c_str(), conn->_svr._port, (_index-1), _conns.size());
 			return true;
 		}
-	}	
+		else
+		{
+			XCP_LOGGER_ERROR(&g_logger, "the conn (%s:%u) is closed, index:%u, total:%u\n", 
+				conn->_svr._ip.c_str(), conn->_svr._port, (_index-1), _conns.size());
+		}
+
+		if(_index >= _conns.size())
+		{
+			_index = 0;
+		}
+
+	}while(_index != tag);
 
 	XCP_LOGGER_ERROR(&g_logger, "no conn is found.\n");
 	return false;

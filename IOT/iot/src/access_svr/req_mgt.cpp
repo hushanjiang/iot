@@ -36,28 +36,3 @@ bool Req_Mgt::full()
 }
 
 
-//------------------------------
-
-Rsp_Mgt::Rsp_Mgt()
-{
-	_queue = new M_Queue<Request_Ptr>();
-}
-
-
-Rsp_Mgt::~Rsp_Mgt()
-{
-
-
-}
-
-int Rsp_Mgt::push_req(const std::string &key, Request_Ptr req)
-{
-	return _queue->push(key, req);
-}
-
-int Rsp_Mgt::get_req(const std::string &key, Request_Ptr &req, const long long timeout)
-{
-	return _queue->pop(key, req, timeout);
-}
-
-

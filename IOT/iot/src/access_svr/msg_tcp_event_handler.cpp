@@ -1,136 +1,153 @@
 
-#include "comm/common.h"
-#include "comm/error_code.h"
 #include "base/base_socket_oper.h"
-#include "base/base_time.h"
 #include "base/base_net.h"
-#include "base/base_string.h"
-#include "base/base_uid.h"
 #include "base/base_logger.h"
-
+#include "base/base_time.h"
+#include "base/base_string.h"
 #include "msg_tcp_event_handler.h"
-#include "req_mgt.h"
-#include "session_mgt.h"
 #include "msg_oper.h"
+#include "protocol.h"
+#include "req_mgt.h"
 
 extern Logger g_logger;
+extern StSysInfo g_sysInfo;
 extern Req_Mgt *g_msg_mgt;
 
-Msg_TCP_Event_Handler::Msg_TCP_Event_Handler(): _buf(""), _cnt(0), _pre_time(0)
+Msg_TCP_Event_Handler::Msg_TCP_Event_Handler(Conn_Mgt_LB *conn_mgt): _buf(""), _conn_mgt(conn_mgt)
 {
 
 };
+
 
 Msg_TCP_Event_Handler::~Msg_TCP_Event_Handler()
 {
 
 };
 
-	
-//´¦Àí½¨Á¢Á¬½ÓÇëÇóÊÂ¼ş
-int Msg_TCP_Event_Handler::handle_accept(int fd)
-{
-	int nRet = 0;
-	
-	std::string local_ip = "";
-	unsigned short local_port = 0;
-	get_local_socket(fd, local_ip, local_port);
-	
-	std::string remote_ip = "";
-	unsigned short remote_port = 0; 
-	get_remote_socket(fd, remote_ip, remote_port);
-	
-	XCP_LOGGER_INFO(&g_logger, "accept from mdp(fd:%d), %s:%u --> %s:%u\n", 
-		fd, remote_ip.c_str(), remote_port, local_ip.c_str(), local_port);
-	
-	return nRet;
-	
-};
 
-
-
-/*
-´¦Àí¶ÁÊÂ¼ş
-telnet ÏûÏ¢½áÎ²\r\n
-¿Í»§¶ËÏûÏ¢½áÎ²\n
-*/
+//å¤„ç†è¯»äº‹ä»¶
 int Msg_TCP_Event_Handler::handle_input(int fd)
 {
 	int nRet = 0;
-	
-	//»ñÈ¡Ç°¶Ëip ºÍport
+
+	//è·å–mdp ip å’Œport
 	std::string ip = "";
 	unsigned short port = 0;
 	get_remote_socket(fd, ip, port);
 	
-	//¶ÁÈ¡fd
-	char buf[4096] = {0};
+	char buf[4096];
 	unsigned int buf_len = 4095;
 	nRet = Socket_Oper::recv(fd, buf, buf_len, 300000);
 	if(nRet == 0)
 	{
-		XCP_LOGGER_INFO(&g_logger, "rcv close form mdp(fd:%d, peer:%s:%u), ret:%d\n", fd, ip.c_str(), port, nRet);
+		XCP_LOGGER_INFO(&g_logger, "rcv close from mdp(fd:%d), ret:%d\n", fd, nRet);
 		return -1;
 	}
 	else if(nRet == 1)
 	{
-		//XCP_LOGGER_INFO(&g_logger, "rcv success from mdp(fd:%d), req(%u):%s\n", fd, buf_len, buf); 
+		//XCP_LOGGER_INFO(&g_logger_debug, "rcv success from mdp(fd:%d), req(%u):%s\n", fd, buf_len, buf);
 	}
 	else
 	{
-		XCP_LOGGER_INFO(&g_logger, "rcv failed from mdp(fd:%d, peer:%s:%u), ret:%d\n", fd, ip.c_str(), port, nRet);
+		XCP_LOGGER_INFO(&g_logger, "rcv failed from mdp(fd:%d), ret:%d\n", fd, nRet);
 		return 0;
 	}
 	buf[buf_len] = '\0';
-	
-	//×·¼Ó»º´æ
+
+	//è¿½åŠ ç¼“å­˜
 	_buf += buf;
 	std::string::size_type pos = _buf.find("\n");
 	while(pos != std::string::npos)
 	{
-		//½âÎöÍêÕûÇëÇó´®
+		//è§£æå®Œæ•´è¯·æ±‚ä¸²
 		std::string req_src = _buf.substr(0, pos);
 		_buf.erase(0, pos+1);
-
+		
+		//XCP_LOGGER_INFO(&g_logger, "rcv request form mdp, req(%u):%s\n",  req_src.size(), req_src.c_str());
+		
 		trim(req_src);
 		
 		if(req_src.size() < MIN_MSG_LEN)
 		{
-			//XCP_LOGGER_ERROR(&g_logger, "the req reach min len, req(%u):%s\n", req_src.size(), req_src.c_str());
-		}		
-		else if(req_src.size() > MAX_MSG_LEN)
-		{
-			XCP_LOGGER_ERROR(&g_logger, "the msg reach max len(%u)\n", MAX_MSG_LEN);
+			//XCP_LOGGER_ERROR(&g_logger_debug, "the req reach min len, req(%u):%s\n", req_src.size(), req_src.c_str());
 		}
 		else
 		{
-			//´¦ÀíÕı³£ÇëÇó
-			Request *req = new Request;
-			req->_stmp = getTimestamp();
-			req->_req = req_src;
-			req->_ip = ip;
-			req->_port = port;
-			req->_fd = fd;
-
-			//Ê×ÏÈÏÈÅĞ¶Ïreq queue ÊÇ·ñÒÑ¾­ÂúÁË
-			if(!(g_msg_mgt->full()))
-			{	
-				nRet = g_msg_mgt->push_req(req);
-				if(nRet != 0)
-				{
-					XCP_LOGGER_ERROR(&g_logger, "push into msg mgt failed, ret:%d, req(%u):%s\n", nRet, buf_len, buf);
-				}
-				
+			std::string method = "";
+			unsigned long long timestamp = 0;
+			std::string msg_tag = "";
+			std::string err_info = "";
+			nRet = XProtocol::admin_head(req_src, method, timestamp, msg_tag, err_info);
+			if(nRet != 0)
+			{
+				XCP_LOGGER_INFO(&g_logger, "admin_head failed, ret:%d, err_info:%s, req(%u):%s\n", 
+					nRet, err_info.c_str(), req_src.size(), req_src.c_str());
 			}
 			else
-			{		
-				XCP_LOGGER_ERROR(&g_logger, "msg mgt is full, req(%u):%s\n", buf_len, buf);			
-			}
+			{
+				if(method == CMD_MDP_REGISTER)
+				{
+					int code = XProtocol::get_rsp_result(req_src, err_info);
+	
+					//æ³¨å†Œå“åº”æ¶ˆæ¯
+					std::string ip = "";
+					unsigned short port = 0;
+					get_remote_socket(fd, ip, port);
+					std::string mdp_id = format("%s_%u", ip.c_str(), port);
+	
+					Conn_Ptr conn;
+					if(!(_conn_mgt->get_conn(mdp_id, conn)))
+					{
+						XCP_LOGGER_ERROR(&g_logger, "register mdp: no conn is found, fd:%d\n", fd);
+					}
+					else
+					{
+						if(code == 0)
+						{
+							conn->_registered = true;
+							XCP_LOGGER_INFO(&g_logger, "register to mdp success.\n");						
+						}
+						else
+						{
+							conn->_registered = false;
+							XCP_LOGGER_INFO(&g_logger, "register to mdp failed.\n");
+						}	
+					}	
+				}	
+				else
+				{
+					//å¤„ç†æ­£å¸¸è¯·æ±‚
+					Request *req = new Request;
+					req->_rcv_stmp = getTimestamp();
+					req->_req = req_src;
+					req->_ip = ip;
+					req->_port = port;
+					req->_fd = fd;
+					req->_msg_tag = msg_tag;
+					
+					//é¦–å…ˆå…ˆåˆ¤æ–­msg queue æ˜¯å¦å·²ç»æ»¡äº†
+					if(!(g_msg_mgt->full()))
+					{	
+						nRet = g_msg_mgt->push_req(req);
+						if(nRet != 0)
+						{
+							XCP_LOGGER_ERROR(&g_logger, "push into msg mgt failed, ret:%d, req(%u):%s\n", nRet, buf_len, buf);
+						}
+						
+					}
+					else
+					{		
+						XCP_LOGGER_ERROR(&g_logger, "msg mgt is full, req(%u):%s\n", buf_len, buf); 		
+					}
 
+				}
+
+			}
+			
 		}
 		
 		pos = _buf.find("\n");
-			
+		
 	}
 
 	return 0;
@@ -140,11 +157,10 @@ int Msg_TCP_Event_Handler::handle_input(int fd)
 
 
 
-//´¦ÀíÁ¬½Ó¹Ø±ÕÊÂ¼ş
+//å¤„ç†è¿æ¥å…³é—­äº‹ä»¶
 int Msg_TCP_Event_Handler::handle_close(int fd)
 {
 	int nRet = 0;
-	std::string err_info = "";
 	
 	std::string local_ip = "";
 	unsigned short local_port = 0;
@@ -153,10 +169,22 @@ int Msg_TCP_Event_Handler::handle_close(int fd)
 	std::string remote_ip = "";
 	unsigned short remote_port = 0; 
 	get_remote_socket(fd, remote_ip, remote_port);
-
-	XCP_LOGGER_INFO(&g_logger, "close from mdp(fd:%d), %s:%u --> %s:%u\n", 
+	
+	XCP_LOGGER_INFO(&g_logger, "close (fd:%d) from mdp, %s:%u --> %s:%u\n", 
 		fd, remote_ip.c_str(), remote_port, local_ip.c_str(), local_port);
 	
+	//åˆ·æ–°æ³¨å†Œæ ‡å¿—ä½
+	std::string mdp_id = format("%s_%u", remote_ip.c_str(), remote_port);
+	Conn_Ptr conn;
+	if(_conn_mgt->get_conn(mdp_id, conn))
+	{
+		conn->_registered = false;
+	}
+	else
+	{
+		XCP_LOGGER_ERROR(&g_logger, "handle close: no mdp conn is found.\n");
+	}
+			
 	return nRet;
 	
 };
@@ -165,7 +193,7 @@ int Msg_TCP_Event_Handler::handle_close(int fd)
 
 Event_Handler* Msg_TCP_Event_Handler::renew()
 {
-	return new Msg_TCP_Event_Handler;
+	return new Msg_TCP_Event_Handler(_conn_mgt);
 };
 
 

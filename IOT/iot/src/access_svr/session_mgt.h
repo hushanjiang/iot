@@ -37,23 +37,29 @@ public:
 
 	~Session_Mgt();
 
-	void insert_session(int fd);
-
-	void remove_session(int fd);
+	void insert_session(int fd, std::string &id);
+	void remove_session(int fd, std::string &id);
 
 	bool is_valid_sesssion(const std::string &id);
+	bool get_fd(const std::string &id, int &fd);
 
 	void update_status(int fd, bool status);
-
 	void update_read(int fd, unsigned long long num, std::string &id);
-
 	void update_write(int fd, unsigned long long num);
 
+	//client id 管理
+	bool set_client_id(const std::string &id, const unsigned long long client_id);
+	bool get_client_id(const std::string &id, unsigned long long &client_id);
+
 	void check();
+
+	int get_security_channel(const std::string &id, const std::string &uuid, std::string &key, std::string &err_info);
 		
 private:
 	Thread_Mutex _mutex;
+	//fd --- session
 	std::map<int, Session> _sessions;
+	//session id --- fd
 	std::map<std::string, int> _fds;
 	
 };

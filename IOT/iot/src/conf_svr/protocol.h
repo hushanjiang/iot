@@ -38,10 +38,10 @@ public:
 		const int code, const std::string &msg, const std::string &body="", bool is_object = false);
 
 
-	//»ñÈ¡·şÎñÆ÷·ÃÎÊÅäÖÃ
+	//è·å–æœåŠ¡å™¨è®¿é—®é…ç½®
 	static int get_server_access_req(const std::string &req, std::string &svr_name, std::string &err_info);
 	static std::string get_server_access_rsp(const std::map<std::string, std::vector<StSvr> > svrs);
-
+	static std::string get_sys_config_result(std::map<std::string, int> configs);
 
 };
 

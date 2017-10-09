@@ -20,7 +20,9 @@ extern Conn_Mgt_LB g_lb_conn;
 extern Conn_Mgt_LB g_user_mgt_conn;
 extern Conn_Mgt_LB g_device_mgt_conn;
 extern Conn_Mgt_LB g_family_mgt_conn;
+extern Conn_Mgt_LB g_push_conn;
 extern Conn_Mgt_LB g_mdp_conn;
+
 
 Conf_Mgt::Conf_Mgt(): _cfg("")
 {
@@ -46,7 +48,7 @@ int Conf_Mgt::init(const std::string &cfg)
 		return nRet;
 	}
 
-	//³õÊ¼»¯TCP Á¬½Ó¹ÜÀí
+	//åˆå§‹åŒ–TCP è¿æ¥ç®¡ç†
 	nRet = init_conn_mgt();
 	if(nRet != 0)
 	{	
@@ -54,7 +56,7 @@ int Conf_Mgt::init(const std::string &cfg)
 		return nRet;
 	}
 
-	//Æô¶¯conf mgt  timer
+	//å¯åŠ¨conf mgt  timer
 	XCP_LOGGER_INFO(&g_logger, "--- prepare to start conf mgt timer ---\n");
 	Select_Timer *timer_req = new Select_Timer;
 	Conf_Timer_handler *conf_thandler = new Conf_Timer_handler;
@@ -95,7 +97,7 @@ int Conf_Mgt::init(const std::string &cfg)
 
 
 
-//³õÊ¼»¯ËùÓĞµÄ³¤Á¬½Ó³Ø
+//åˆå§‹åŒ–æ‰€æœ‰çš„é•¿è¿æ¥æ± 
 int Conf_Mgt::init_conn_mgt()
 {
 	int nRet = 0;
@@ -104,27 +106,26 @@ int Conf_Mgt::init_conn_mgt()
 	nRet = g_conf_mgt_conn.init(&_conf_svr);
 	if(nRet != 0)
 	{
-		printf("init conf mgt req conn, ret:%d\n", nRet);
+		printf("init conf mgt conn, ret:%d\n", nRet);
 		return nRet;
 	}
 
 	//lb svr
 	std::vector<StSvr> svrs;
 	Register_Event_Handler *handler1 = new Register_Event_Handler(&g_lb_conn, ST_LB);
-	g_lb_conn._out_ip = true;
-	nRet = g_lb_conn.init(&svrs, handler1, true, true);
+	nRet = g_lb_conn.init(&svrs, handler1, true, ST_LB);
 	if(nRet != 0)
 	{
 		printf("init lb conn.\n");
 		return nRet;
 	}
 
-	//user svr
+	//user mgt
 	RSP_TCP_Event_Handler *handler2 = new RSP_TCP_Event_Handler(ST_USER_MGT);
 	nRet = g_user_mgt_conn.init(&svrs, handler2, true);
 	if(nRet != 0)
 	{
-		printf("init auth conn.\n");
+		printf("init user mgt conn.\n");
 		return nRet;
 	}
 	
@@ -133,7 +134,7 @@ int Conf_Mgt::init_conn_mgt()
 	nRet = g_device_mgt_conn.init(&svrs, handler3, true);
 	if(nRet != 0)
 	{
-		printf("init client mgt conn.\n");
+		printf("init device mgt conn.\n");
 		return nRet;
 	}
 	
@@ -142,13 +143,23 @@ int Conf_Mgt::init_conn_mgt()
 	nRet = g_family_mgt_conn.init(&svrs, handler4, true);
 	if(nRet != 0)
 	{
-		printf("init session mgt conn.\n");
+		printf("init family mgt conn.\n");
+		return nRet;
+	}
+
+	//push svr
+	//RSP_TCP_Event_Handler *handler5 = new RSP_TCP_Event_Handler(ST_PUSH);
+	//nRet = g_push_conn.init(&svrs, handler5, true);
+	nRet = g_push_conn.init(&svrs);
+	if(nRet != 0)
+	{
+		printf("init push conn.\n");
 		return nRet;
 	}
 
 	//mdp
-	Msg_TCP_Event_Handler *handler5 = new Msg_TCP_Event_Handler();
-	nRet = g_mdp_conn.init(&svrs, handler5, true);
+	Msg_TCP_Event_Handler *handler6 = new Msg_TCP_Event_Handler(&g_mdp_conn);
+	nRet = g_mdp_conn.init(&svrs, handler6, true, ST_MDP);
 	if(nRet != 0)
 	{
 		printf("init mdp conn.\n");
@@ -255,8 +266,9 @@ int Conf_Mgt::refresh()
 		}
 	}
 	
-	//Message IDÃüÃû¹æÔò£º [svr id]_[ip]_[port]
-	sysInfo._new_id = format("%s_%s_%u", sysInfo._id.c_str(), sysInfo._ip.c_str(), sysInfo._port);
+	//Message IDå‘½åè§„åˆ™ï¼š [svr id]_[ip_out]_[port]
+	sysInfo._log_id = format("%s_%s_%u", sysInfo._id.c_str(), sysInfo._ip_out.c_str(), sysInfo._port);
+	sysInfo._new_id = format("%s_%llu_%d", sysInfo._log_id.c_str(), getTimestamp(), get_pid());
 	
 	//thr_num
 	nRet = _parser.get_node("access_svr/system/thr_num", node);
@@ -515,6 +527,24 @@ int Conf_Mgt::update_svr()
 				XCP_LOGGER_INFO(&g_logger, "family mgt svr is empty.\n");
 			}
 
+			//push
+			if(!svrs[ST_PUSH].empty())
+			{
+				std::vector<StSvr> servers;
+				for(unsigned int i=0; i<svrs[ST_PUSH].size(); i++)
+				{
+					StSvr svr;
+					svr._ip = svrs[ST_PUSH][i]._ip;
+					svr._port = svrs[ST_PUSH][i]._port;
+					servers.push_back(svr);
+				}
+				g_push_conn.refresh(&servers);
+			}
+			else
+			{
+				XCP_LOGGER_INFO(&g_logger, "push svr is empty.\n");
+			}
+
 			//mdp
 			if(!svrs[ST_MDP].empty())
 			{
@@ -555,7 +585,7 @@ int Conf_Mgt::update_svr()
 
 
 
-//»ñÈ¡¸±±¾
+//è·å–å‰¯æœ¬
 StSysInfo Conf_Mgt::get_sysinfo()
 {
 	Thread_Mutex_Guard guard(_mutex);

@@ -33,7 +33,7 @@ Req_TCP_Event_Handler::~Req_TCP_Event_Handler()
 };
 
 	
-//´¦Àí½¨Á¢Á¬½ÓÇëÇóÊÂ¼ş
+//å¤„ç†å»ºç«‹è¿æ¥è¯·æ±‚äº‹ä»¶
 int Req_TCP_Event_Handler::handle_accept(int fd)
 {
 	int nRet = 0;
@@ -48,8 +48,18 @@ int Req_TCP_Event_Handler::handle_accept(int fd)
 	
 	XCP_LOGGER_INFO(&g_logger, "accept from app(fd:%d), %s:%u --> %s:%u\n", 
 		fd, remote_ip.c_str(), remote_port, local_ip.c_str(), local_port);
-	
-	PSGT_Session_Mgt->insert_session(fd);
+
+	unsigned int client_num = PSGT_Client_Mgt->client_num();
+	if(client_num > MAX_CLIENT_CNT)
+	{
+		XCP_LOGGER_INFO(&g_logger, "===deny_client: client_num(%u) > MAX_CLIENT_CNT, deny the client(fd:d)\n", client_num, fd);
+		return -1;
+	}
+
+	std::string session_id = "";
+	PSGT_Session_Mgt->insert_session(fd, session_id);
+
+	XCP_LOGGER_INFO(&g_logger, "new session id: %s\n", session_id.c_str());
 	
 	return nRet;
 	
@@ -58,20 +68,20 @@ int Req_TCP_Event_Handler::handle_accept(int fd)
 
 
 /*
-´¦Àí¶ÁÊÂ¼ş
-telnet ÏûÏ¢½áÎ²\r\n
-¿Í»§¶ËÏûÏ¢½áÎ²\n
+å¤„ç†è¯»äº‹ä»¶
+telnet æ¶ˆæ¯ç»“å°¾\r\n
+å®¢æˆ·ç«¯æ¶ˆæ¯ç»“å°¾\n
 */
 int Req_TCP_Event_Handler::handle_input(int fd)
 {
 	int nRet = 0;
 	
-	//»ñÈ¡Ç°¶Ëip ºÍport
+	//è·å–å‰ç«¯ip å’Œport
 	std::string ip = "";
 	unsigned short port = 0;
 	get_remote_socket(fd, ip, port);
 	
-	//¶ÁÈ¡fd
+	//è¯»å–fd
 	char buf[4096] = {0};
 	unsigned int buf_len = 4095;
 	nRet = Socket_Oper::recv(fd, buf, buf_len, 300000);
@@ -82,7 +92,7 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 	}
 	else if(nRet == 1)
 	{
-		XCP_LOGGER_INFO(&g_logger, "rcv success from app(fd:%d), req(%u):%s\n", fd, buf_len, buf); 
+		//XCP_LOGGER_INFO(&g_logger, "rcv success from app(fd:%d), req(%u):%s\n", fd, buf_len, buf); 
 	}
 	else
 	{
@@ -95,19 +105,19 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 	PSGT_Session_Mgt->update_read(fd, buf_len, session_id);
 	
 	
-	//×·¼Ó»º´æ
+	//è¿½åŠ ç¼“å­˜
 	_buf += buf;
 	std::string::size_type pos = _buf.find("\n");
 	while(pos != std::string::npos)
 	{
-		//½âÎöÍêÕûÇëÇó´®
+		//è§£æå®Œæ•´è¯·æ±‚ä¸²
 		std::string req_src = _buf.substr(0, pos);
 		_buf.erase(0, pos+1);
 
 		trim(req_src);
 
-		//×·¼ÓÄÚ²¿ÇëÇómsg_id
-		std::string msg_tag = UID::uid_inc(g_sysInfo._new_id);
+		//è¿½åŠ å†…éƒ¨è¯·æ±‚msg_id
+		std::string msg_tag = UID::uid_inc(g_sysInfo._log_id);
 					
 		if(req_src.size() < MIN_MSG_LEN)
 		{
@@ -116,17 +126,18 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 		else if(req_src.size() > MAX_MSG_LEN)
 		{
 			XCP_LOGGER_ERROR(&g_logger, "the req reach max len(%u)\n", MAX_MSG_LEN);
-			Msg_Oper::send_msg(fd, session_id, "null", 0, msg_tag, ERR_REACH_MAX_MSG, "the req reach max len.");
+			Msg_Oper::send_msg(fd, session_id, "", "false", "", "", 0, msg_tag, ERR_REACH_MAX_MSG, "the req reach max len.");
 		}
 		else
 		{
-			//µ¥Á´½ÓÃ¿Ãë×î¶à·¢ËÍMSG_CNT_PER_SEC ÌõÇëÇó
+			/*
+			//å•é“¾æ¥æ¯ç§’æœ€å¤šå‘é€MSG_CNT_PER_SEC æ¡è¯·æ±‚
 			unsigned long long cur_time = time(NULL);
 			++_cnt;
 			if((_cnt > MSG_CNT_PER_SEC) && ((cur_time - _pre_time) < 1))
 			{
 				XCP_LOGGER_ERROR(&g_logger, "reach max req count during per sec.\n");
-				Msg_Oper::send_msg(fd, session_id, "null", 0, msg_tag, ERR_REACH_MAX_MSG_CNT, "reach max rq count during per sec.");
+				Msg_Oper::send_msg(fd, session_id, "", "false", "", "", 0, msg_tag, ERR_REACH_MAX_MSG_CNT, "reach max rq count during per sec.");
 				continue;
 			}
 			
@@ -135,10 +146,11 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 				_pre_time = cur_time;
 				_cnt = 1;
 			}
+			*/
 
-			//´¦ÀíÕı³£ÇëÇó
+			//å¤„ç†æ­£å¸¸è¯·æ±‚
 			Request *req = new Request;
-			req->_stmp = getTimestamp();
+			req->_rcv_stmp = getTimestamp();
 			req->_req = req_src;
 			req->_msg_tag = msg_tag;
 			req->_ip = ip;
@@ -146,7 +158,7 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 			req->_session_id = session_id;
 			req->_fd = fd;
 
-			//Ê×ÏÈÏÈÅĞ¶Ïreq queue ÊÇ·ñÒÑ¾­ÂúÁË
+			//é¦–å…ˆå…ˆåˆ¤æ–­req queue æ˜¯å¦å·²ç»æ»¡äº†
 			if(!(g_req_mgt->full()))
 			{	
 				nRet = g_req_mgt->push_req(req);
@@ -154,14 +166,14 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 				{
 					XCP_LOGGER_ERROR(&g_logger, "push into req mgt failed, ret:%d, req(%u):%s\n", 
 						nRet, buf_len, buf);
-					Msg_Oper::send_msg(fd, session_id, "null", 0, msg_tag, ERR_PUSH_QUEUE_FAIL, "server is busy, try it later!");
+					Msg_Oper::send_msg(fd, session_id, "", "false", "", "", 0, msg_tag, ERR_PUSH_QUEUE_FAIL, "server is busy, try it later!");
 				}
 				
 			}
 			else
 			{		
 				XCP_LOGGER_ERROR(&g_logger, "req mgt is full, req(%u):%s\n", buf_len, buf);			
-				Msg_Oper::send_msg(fd, session_id, "null", 0, msg_tag, ERR_QUEUE_FULL, "req mgt is full.");
+				Msg_Oper::send_msg(fd, session_id, "", "false", "", "", 0, msg_tag, ERR_QUEUE_FULL, "req mgt is full.");
 			}
 
 		}
@@ -177,7 +189,7 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 
 
 
-//´¦ÀíÁ¬½Ó¹Ø±ÕÊÂ¼ş
+//å¤„ç†è¿æ¥å…³é—­äº‹ä»¶
 int Req_TCP_Event_Handler::handle_close(int fd)
 {
 	int nRet = 0;
@@ -194,6 +206,12 @@ int Req_TCP_Event_Handler::handle_close(int fd)
 	XCP_LOGGER_INFO(&g_logger, "close from app(fd:%d), %s:%u --> %s:%u\n", 
 		fd, remote_ip.c_str(), remote_port, local_ip.c_str(), local_port);
 
+	std::string session_id = "";
+	PSGT_Session_Mgt->remove_session(fd, session_id);
+	PSGT_Client_Mgt->unregister_client(session_id);
+
+	XCP_LOGGER_INFO(&g_logger, "close session id: %s\n", session_id.c_str());
+		
 	return nRet;
 	
 };

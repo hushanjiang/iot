@@ -38,14 +38,14 @@ public:
 
 	~MySQL_Row();
 
-	//»ñÈ¡Ö¸¶¨ÁÐ±íµÄÊýÖµ(×Ö·û´®)
+	//ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½Öµ(ï¿½Ö·ï¿½ï¿½ï¿½)
 	std::string operator [](int field_id);
 
-	//Ä£°å·½Ê½»ñÈ¡Ö¸¶¨ÁÐ±íµÄÊýÖµ
+	//Ä£ï¿½å·½Ê½ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½Öµ
 	template <typename T>
 	T get_value(int field_id);
 
-	//Ïòm_Record ²åÈëÒ»¸ö×Ö¶ÎÖµ
+	//ï¿½ï¿½m_Record ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö¶ï¿½Öµ
 	void operator()(const std::string &value);
 	
 private:
@@ -73,13 +73,13 @@ public:
 
 	void operator()(MySQL_Row &row);
 
-	//Í¨¹ý×Ö¶ÎÃû³Æ·µ»Ø×Ö¶ÎË÷ÒýÖµ
+	//Í¨ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
 	int operator()(std::string field_name);
 
 	void show_all();
 	
 
-	//ÏÂÃæ3¸ö½Ó¿ÚMySQL_Conn Ê¹ÓÃ£¬ Íâ²¿Ó¦ÓÃ²»ÒªÊ¹ÓÃ
+	//ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½Ó¿ï¿½MySQL_Conn Ê¹ï¿½Ã£ï¿½ ï¿½â²¿Ó¦ï¿½Ã²ï¿½ÒªÊ¹ï¿½ï¿½
 	void field_count(int count);
 
 	void row_count(int count);
@@ -93,14 +93,14 @@ private:
 private:
 	int m_row;
 	int m_field; 
-	std::vector<MySQL_Row> m_Record_Set;      //´æ´¢µÄÊÇ²éÑ¯½á¹û¼¯
-	std::map<std::string, int> m_Field_Name;  //´æ´¢µÄÊÇ½á¹û¼¯×Ö¶ÎÃû³Æ
+	std::vector<MySQL_Row> m_Record_Set;      //ï¿½æ´¢ï¿½ï¿½ï¿½Ç²ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½ï¿½
+	std::map<std::string, int> m_Field_Name;  //ï¿½æ´¢ï¿½ï¿½ï¿½Ç½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½
 	
 };
 
 
 
-//mysql Á¬½ÓÀà
+//mysql ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 class mysql_conn : public RefCounter
 {
 public:
@@ -113,19 +113,19 @@ public:
 			              const std::string &db, const std::string &chars = "");
 	
 
-	int query_sql(const std::string sql, MySQL_Row_Set &row_set);
+	int query_sql(const std::string sql, MySQL_Row_Set &row_set, std::string &errInfo);
 		
-	int execute_sql(const std::string sql, unsigned long long &last_insert_id, unsigned long long &affected_rows);
+	int execute_sql(const std::string sql, unsigned long long &last_insert_id, unsigned long long &affected_rows, std::string &errInfo);
 	
-	//Êä³öbuffer ÓÉÍâ²¿·ÖÅä
+	//ï¿½ï¿½ï¿½buffer ï¿½ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½
 	unsigned long escape_string(char *to, const char *from, unsigned long length);
 
 	void release_conn();
 
-	//Í¨¹ýping ¶Ômysql ³¤Á¬½Ó½øÐÐ¼ì²é
+	//Í¨ï¿½ï¿½ping ï¿½ï¿½mysql ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½ï¿½Ð¼ï¿½ï¿½
 	bool ping();
 
-	//ÊÂÎñ
+	//ï¿½ï¿½ï¿½ï¿½
 	int autocommit(bool open);
 	int commit();
 	int rollback();
@@ -140,8 +140,8 @@ public:
 	std::string  _db;
 	std::string  _chars;
 	
-	bool _conn;   //ÊÇ·ñÒÑ¾­Á¬½Ó
-	bool _used;   //ÊÇ·ñÕýÔÚÊ¹ÓÃ
+	bool _conn;   //ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
+	bool _used;   //ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½
 	int _seq;
 	
 };

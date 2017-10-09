@@ -104,31 +104,21 @@ int Processor::svc()
 		XCP_LOGGER_INFO(&g_logger, "--- get user right ---\n");
 		
 	}
-	else if(method == CMD_GET_DEVICE_TYPE)
+	else if(method == CMD_GET_SYS_CONFIG)
 	{
-		XCP_LOGGER_INFO(&g_logger, "--- get device type ---\n");
+		XCP_LOGGER_INFO(&g_logger, "--- get system config ---\n");
 		
+		std::map<std::string, int> configs;
+		std::string err_info;
+		nRet = PSGT_Conf_Mgt->get_sys_config(configs, err_info);
+		if(nRet != 0)
+		{
+			Msg_Oper::send_msg(req->_fd, method, req_id, req->_msg_tag, nRet, err_info);
+			return 0;
+		}
+		Msg_Oper::send_msg(req->_fd, method, req_id, msg_tag, ERR_SUCCESS, "get system config success.", 
+			XProtocol::get_sys_config_result(configs), true);
 	}
-	else if(method == CMD_GET_AUTH_KEY)
-	{
-		XCP_LOGGER_INFO(&g_logger, "--- get auth key ---\n");
-		
-	}
-	else if(method == CMD_GET_SECURITY_PUB)
-	{
-		XCP_LOGGER_INFO(&g_logger, "--- get security pub ---\n");
-		
-	}
-	else if(method == CMD_GET_SECURITY_PRI)
-	{
-		XCP_LOGGER_INFO(&g_logger, "--- get security pri ---\n");
-		
-	}
-	else if(method == CMD_GET_WHITE_LIST)
-	{
-		XCP_LOGGER_INFO(&g_logger, "--- get white list ---\n");
-		
-	}	
 	else
 	{
 		XCP_LOGGER_INFO(&g_logger, "invalid method(%s) from app\n", method.c_str());
@@ -138,5 +128,4 @@ int Processor::svc()
 	return 0;
 
 }
-
 

@@ -52,27 +52,6 @@ private:
 
 #define PSGT_Req_Mgt Singleton_T<Req_Mgt>::getInstance()
 
-
-//--------------------------------
-
-
-class Rsp_Mgt
-{
-public:
-	Rsp_Mgt();
-
-	~Rsp_Mgt();
-
-	int push_req(const std::string &key, Request_Ptr req);
-
-	int get_req(const std::string &key, Request_Ptr &req, const long long timeout=300);
-	
-private:
-	M_Queue<Request_Ptr> *_queue;
-};
-
-#define PSGT_Rsp_Mgt Singleton_T<Rsp_Mgt>::getInstance()
-
 #endif
 
 

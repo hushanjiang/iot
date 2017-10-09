@@ -10,6 +10,16 @@
 extern Logger g_logger;
 extern mysql_mgt g_mysql_mgt;
 
+#define CHECK_RET(nRet)	\
+{ \
+	if(nRet != 0) \
+	{ \
+		XCP_LOGGER_ERROR(&g_logger, "check return failed: %d.\n", nRet); \
+		return nRet; \
+	} \
+}
+
+
 Conf_Mgt::Conf_Mgt(): _cfg("")
 {
 
@@ -276,7 +286,7 @@ int Conf_Mgt::refresh()
 
 
 
-//获取副本
+//鑾峰彇鍓湰
 StSysInfo Conf_Mgt::get_sysinfo()
 {
 	Thread_Mutex_Guard guard(_mutex);
@@ -347,6 +357,32 @@ int Conf_Mgt::get_server_access(std::string &svr_name, std::map<std::string, std
 	
 	return nRet;
 	
+}
+
+int Conf_Mgt::get_sys_config(std::map<std::string, int> &configs, std::string &err_info)
+{
+	mysql_conn_Ptr conn;
+	if(!g_mysql_mgt.get_conn(conn))
+	{
+		XCP_LOGGER_ERROR(&g_logger, "get mysql conn failed.\n");
+		return ERR_GET_MYSQL_CONN_FAILED;
+	}	
+	MySQL_Guard guard(conn);
+	
+	/* select F_key, F_value from tbl_sys_config; */
+	std::ostringstream sql;
+	sql << "select F_key, F_value from tbl_sys_config;";
+	MySQL_Row_Set row_set;
+	int nRet = conn->query_sql(sql.str(), row_set);
+	CHECK_RET(nRet);
+	
+	XCP_LOGGER_INFO(&g_logger, "get sys config, get %d recored\n", row_set.row_count());
+	for(int i=0; i<row_set.row_count(); i++)
+	{
+		configs.insert(std::make_pair<std::string, int>(row_set[i][0], atoi(row_set[i][1].c_str())));
+	}
+
+	return 0;
 }
 
 

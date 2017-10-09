@@ -39,8 +39,6 @@ private:
 	virtual int svc();
 
 	virtual int do_init(void *args);
-
-	std::string get_geography(const std::string &ip);
 };
 
 #endif

@@ -44,7 +44,7 @@ public:
 
 	int update_svr();
 
-	//获取本地配置文件
+	//鑾峰彇鏈湴閰嶇疆鏂囦欢
 	StSysInfo get_sysinfo();
 
 	std::vector<StSvr> get_conf_svr();

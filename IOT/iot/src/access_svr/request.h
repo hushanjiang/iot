@@ -29,6 +29,8 @@
 
 USING_NS_BASE;
 
+
+
 class Request : public RefCounter
 {
 public:
@@ -41,15 +43,24 @@ public:
 	std::string to_string();
 
 public:
-	std::string _msg_tag;  //ÄÚ²¿ÉèÖÃ(Î¨Ò»id)
-	unsigned int _req_id;  //Ç°¶ËÉèÖÃ
-	std::string _req;      //×·¼ÓÁË_msg_idµÄÇëÇó´®
-	int _fd;               //Ç°¶Ëfd
-	std::string _ip;       //Ç°¶Ëip
-	unsigned short _port;  //Ç°¶Ëport
-	unsigned long long _stmp;       //ÏûÏ¢´´½¨Ê±¼ä´Á
-	unsigned long long _app_stmp;   //Íâ²¿Ó¦ÓÃÌîĞ´µÄÊ±¼ä´Á
+	std::string _msg_tag;  //å†…éƒ¨è®¾ç½®(å”¯ä¸€id)
+	unsigned int _req_id;  //å‰ç«¯è®¾ç½®
+	std::string _req;      //è¿½åŠ äº†_msg_idçš„è¯·æ±‚ä¸²
+	std::string _msg_type;  //æ¶ˆæ¯ç±»å‹
+	
+	int _fd;               //å‰ç«¯fd
+	std::string _ip;       //å‰ç«¯ip
+	unsigned short _port;  //å‰ç«¯port
+
+	unsigned long long _app_stmp;   	//å®¢æˆ·ç«¯å¡«å†™çš„æ—¶é—´æˆ³
+	unsigned long long _rcv_stmp;       //æ¶ˆæ¯åˆ›å»ºæ—¶é—´æˆ³
+	unsigned long long _process_stmp;   //å¤–éƒ¨åº”ç”¨å¡«å†™çš„æ—¶é—´æˆ³
+	
 	std::string _session_id;
+
+	std::string _uuid;    //å®‰å…¨é€šé“ID 
+	std::string _key;     //å®‰å…¨é€šé“ç§˜é’¥
+	std::string _encry;   //æ˜¯å¦è¦åŠ å¯†è§£å¯†
 	
 };
 typedef Smart_Ptr_T<Request>  Request_Ptr;

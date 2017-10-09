@@ -64,7 +64,7 @@ int Admin::svc()
 				XCP_LOGGER_INFO(&g_logger, "refresh conf success\n");
 			}
 			
-			//Ë¢ÐÂconf svr req
+			//åˆ·æ–°conf svr req
 			std::vector<StSvr> conf_svr = PSGT_Conf_Mgt->get_conf_svr();
 			g_conf_mgt_conn.refresh(&conf_svr);
 

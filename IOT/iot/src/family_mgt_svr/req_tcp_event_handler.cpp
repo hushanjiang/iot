@@ -25,7 +25,7 @@ Req_TCP_Event_Handler::~Req_TCP_Event_Handler()
 };
 
 	
-//´¦Àí½¨Á¢Á¬½ÓÇëÇóÊÂ¼þ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
 int Req_TCP_Event_Handler::handle_accept(int fd)
 {
 	int nRet = 0;
@@ -48,20 +48,20 @@ int Req_TCP_Event_Handler::handle_accept(int fd)
 
 
 /*
-´¦Àí¶ÁÊÂ¼þ
-telnet ÏûÏ¢½áÎ²\r\n
-¿Í»§¶ËÏûÏ¢½áÎ²\n
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+telnet ï¿½ï¿½Ï¢ï¿½ï¿½Î²\r\n
+ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Î²\n
 */
 int Req_TCP_Event_Handler::handle_input(int fd)
 {
 	int nRet = 0;
 	
-	//»ñÈ¡Ç°¶Ëip ºÍport
+	//ï¿½ï¿½È¡Ç°ï¿½ï¿½ip ï¿½ï¿½port
 	std::string ip = "";
 	unsigned short port = 0;
 	get_remote_socket(fd, ip, port);
 	
-	//¶ÁÈ¡fd
+	//ï¿½ï¿½È¡fd
 	char buf[4096] = {0};
 	unsigned int buf_len = 4095;
 	nRet = Socket_Oper::recv(fd, buf, buf_len, 300000);
@@ -82,12 +82,12 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 	buf[buf_len] = '\0';
 
 
-	//×·¼Ó»º´æ
+	//×·ï¿½Ó»ï¿½ï¿½ï¿½
 	_buf += buf;
 	std::string::size_type pos = _buf.find("\n");
 	while(pos != std::string::npos)
 	{
-		//½âÎöÍêÕûÇëÇó´®
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		std::string req_src = _buf.substr(0, pos);
 		_buf.erase(0, pos+1);
 
@@ -100,11 +100,11 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 		else if(req_src.size() > MAX_MSG_LEN)
 		{
 			XCP_LOGGER_ERROR(&g_logger, "the req reach max len(%u)\n", MAX_MSG_LEN);
-			Msg_Oper::send_msg(fd, "", 0, "", ERR_REACH_MAX_MSG, "the req reach max len.");
+			Msg_Oper::send_msg(fd, "", 0, "", "", "", "", ERR_REACH_MAX_MSG, "the req reach max len.");
 		}
 		else
 		{
-			//´¦ÀíÕý³£ÇëÇó
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			Request *req = new Request;
 			req->_stmp = getTimestamp();
 			req->_req = req_src;
@@ -114,7 +114,7 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 
 			XCP_LOGGER_INFO(&g_logger, "===req from app:%s\n", req->to_string().c_str());
 
-			//Ê×ÏÈÏÈÅÐ¶Ïreq queue ÊÇ·ñÒÑ¾­ÂúÁË
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½req queue ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
 			if(!(PSGT_Req_Mgt->full()))
 			{	
 				nRet = PSGT_Req_Mgt->push_req(req);
@@ -122,14 +122,14 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 				{
 					XCP_LOGGER_ERROR(&g_logger, "push req into req mgt failed, ret:%d, req(%u):%s\n", 
 						nRet, buf_len, buf);
-					Msg_Oper::send_msg(fd, "", 0, "", ERR_PUSH_QUEUE_FAIL, "push req into req mgt failed.");
+					Msg_Oper::send_msg(fd, "", 0, "", "", "", "", ERR_PUSH_QUEUE_FAIL, "push req into req mgt failed.");
 				}
 				
 			}
 			else
 			{		
 				XCP_LOGGER_ERROR(&g_logger, "req mgt is full, req(%u):%s\n", buf_len, buf);			
-				Msg_Oper::send_msg(fd, "", 0, "", ERR_QUEUE_FULL, "req mgt is full.");
+				Msg_Oper::send_msg(fd, "", 0, "", "", "", "", ERR_QUEUE_FULL, "req mgt is full.");
 			}
 
 		}
@@ -144,7 +144,7 @@ int Req_TCP_Event_Handler::handle_input(int fd)
 
 
 
-//´¦ÀíÁ¬½Ó¹Ø±ÕÊÂ¼þ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹Ø±ï¿½ï¿½Â¼ï¿½
 int Req_TCP_Event_Handler::handle_close(int fd)
 {
 	int nRet = 0;

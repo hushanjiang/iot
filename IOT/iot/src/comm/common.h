@@ -29,23 +29,24 @@
 USING_NS_BASE;
 
 
-//----------- ÏµÍ³ÏŞÖÆ-----------
+//----------- ç³»ç»Ÿé™åˆ¶-----------
 
-const unsigned int MIN_MSG_LEN = 35;                  //×îĞ¡ÏûÏ¢³¤¶È{"head":{"cmd":"hb", "time":111111}}
-const unsigned int MAX_MSG_LEN = 20480;               //×î´óÏûÏ¢³¤¶È20KB
-const unsigned int MSG_CNT_PER_SEC = 100;             //Ã¿¸öÁ´½ÓÃ¿ÃëÖĞ×î¶à·¢ËÍ¼¸ÌõÏûÏ¢   
-const unsigned int SECURITY_CHANNEL_TTL = 259200;     //°²È«Í¨µÀkeyµÄttlÉèÖÃ(È±Ê¡3Ìì)
-const unsigned int MAX_SEARCH_CLIENT_CNT = 500;       //Ã¿´Î´ÓRedis »ñÈ¡×î´ó¿Í»§¶ËÊı
-const unsigned int MAX_CLIENT_CNT = 20000;            //Access Svr ×î´ó²¢·¢ÏŞÖÆ
-const std::string  AES_CBC_IV = "1234567890123456";   //AES¶Ô³Æ¼ÓÃÜ½âÃÜIV
+const unsigned int MIN_MSG_LEN = 35;                  //æœ€å°æ¶ˆæ¯é•¿åº¦{"head":{"cmd":"hb", "time":111111}}
+const unsigned int MAX_MSG_LEN = 20480;               //æœ€å¤§æ¶ˆæ¯é•¿åº¦20KB
+const unsigned int MSG_CNT_PER_SEC = 100;             //æ¯ä¸ªé“¾æ¥æ¯ç§’ä¸­æœ€å¤šå‘é€å‡ æ¡æ¶ˆæ¯   
+const unsigned int SECURITY_CHANNEL_TTL = 259200;     //å®‰å…¨é€šé“keyçš„ttlè®¾ç½®(ç¼ºçœ3å¤©)
+const unsigned int MAX_SEARCH_CLIENT_CNT = 500;       //æ¯æ¬¡ä»Redis è·å–æœ€å¤§å®¢æˆ·ç«¯æ•°
+const unsigned int MAX_CLIENT_CNT = 20000;            //Access Svr æœ€å¤§å¹¶å‘é™åˆ¶
+const std::string  AES_CBC_IV = "1234567890123456";   //AESå¯¹ç§°åŠ å¯†è§£å¯†IV
 
-const unsigned int MAX_UUID_LEN = 64;                 //¿Í»§¶ËUUID ³¤¶È
-const unsigned int MAX_AES_KEY_LEN = 32;              //AES key ³¤¶È
+const unsigned int MAX_UUID_LEN = 64;                 //å®¢æˆ·ç«¯UUID é•¿åº¦
+const unsigned int MAX_AES_KEY_LEN = 32;              //AES key é•¿åº¦
+const unsigned int EXTRA_CONNCTION_POOL_NUM = 3;      //æ¯ä¸ªå­˜å‚¨é“¾æ¥åœ¨å¤„ç†çº¿ç¨‹æ± çš„åŸºç¡€ä¸Šé¢å¤–å¤šåŠ 3ä¸ªé“¾æ¥
 
 
-//---------------------------  È«¾Ö±äÁ¿-------------------------------
+//---------------------------  å…¨å±€å˜é‡-------------------------------
 
-//·şÎñÀàĞÍ
+//æœåŠ¡ç±»å‹
 const std::string ST_LB = "lb_svr";                   //LB Svr
 const std::string ST_ACCESS = "access_svr";           //Access Svr
 const std::string ST_USER_MGT = "user_mgt_svr";       //User Mgt Svr
@@ -57,49 +58,50 @@ const std::string ST_UID = "uid_svr";                 //Uid Svr
 const std::string ST_SECURITY = "security_svr";       //Security Svr
 const std::string ST_PUSH = "push_svr";               //Push Svr
 const std::string ST_SMS = "sms_svr";                 //SMS Svr
-const std::string ST_BUSINESS = "business_svr";       //ÒµÎñ·şÎñÆ÷Í³³Æ
+const std::string ST_BUSINESS = "business_svr";       //ä¸šåŠ¡æœåŠ¡å™¨ç»Ÿç§°
 
 
-//ÖÕ¶ËÀàĞÍ
+//ç»ˆç«¯ç±»å‹
 const std::string TT_APP = "APP";                     //APP
 const std::string TT_IOS = "IOS";                     //IOS
-const std::string TT_ANDRIOD = "Andriod";             //Andriod
+const std::string TT_ANDROID = "Android";             //Android
 const std::string TT_ROUTER = "Router";               //Router
 const std::string TT_UNKNOWN = "unknown";             //unknown
 
 
-//»á»°ÀàĞÍ
+//ä¼šè¯ç±»å‹
 const std::string MT_P2P = "P2P";                             //app --> app
 const std::string MT_P2R = "P2R";                             //app --> router
 const std::string MT_P2F = "P2F";                             //app --> family
 const std::string MT_R2P = "R2P";                             //router -->app
 const std::string MT_R2F = "R2F";                             //router -->family
-const std::string MT_BROADCAST = "broadcast";                 //¹ã²¥all
-const std::string MT_BROADCAST_APP = "broadcast_app";         //¹ã²¥app
-const std::string MT_BROADCAST_ROUTER = "broadcast_router";   //¹ã²¥Â·ÓÉÆ÷
+const std::string MT_BROADCAST = "broadcast";                 //å¹¿æ’­all
+const std::string MT_BROADCAST_APP = "broadcast_app";         //å¹¿æ’­app
+const std::string MT_BROADCAST_ROUTER = "broadcast_router";   //å¹¿æ’­è·¯ç”±å™¨
 
 
-//Method Ç°×º
+//Method å‰ç¼€
 const std::string MP_UM = "um_";                      //user mgt svr request
 const std::string MP_FM = "fm_";                      //family mgt svr request
 const std::string MP_DM = "dm_";                      //device mgt svr request
 
 
-// ÓÃ»§×´Ì¬
-const std::string US_ONLINE = "online";          //ÔÚÏß
-const std::string US_OFFLINE = "offline";        //ÀëÏß
-const std::string US_KICKOFF = "kickoff";        //ÌßÏÂÏß 
+// ç”¨æˆ·çŠ¶æ€
+const std::string US_LOGIN = "login";            //ç™»å½•
+const std::string US_OFFLINE = "offline";        //ç¦»çº¿
+const std::string US_LOGOUT = "logout";          //é€€å‡º
+const std::string US_KICKOFF = "kickoff";        //è¸¢ä¸‹çº¿ 
 
 
-//ÏµÍ³ÅäÖÃ¼üÖµ
-const std::string SYS_SEND_RATE = "send_rate";          //µ¥¸ö³¤Á¬½Ó·¢ËÍËÙÂÊ
-const std::string SYS_MAX_CLIENT = "max_client";        //½ÓÈë·şÎñ×î´ó¿Í»§¶ËÊı
+//ç³»ç»Ÿé…ç½®é”®å€¼
+const std::string SYS_SEND_RATE = "send_rate";          //å•ä¸ªé•¿è¿æ¥å‘é€é€Ÿç‡
+const std::string SYS_MAX_CLIENT = "max_client";        //æ¥å…¥æœåŠ¡æœ€å¤§å®¢æˆ·ç«¯æ•°
 
 
 
-//---------------------------  È«¾ÖÃ¶¾Ù-------------------------------
+//---------------------------  å…¨å±€æšä¸¾-------------------------------
 
-// ¼ÒÍ¥³ÉÔ±½ÇÉ«
+// å®¶åº­æˆå‘˜è§’è‰²
 enum member_role_in_family
 {
 	FAMILY_ROLE_OWNER = 0,
@@ -110,7 +112,7 @@ enum member_role_in_family
 
 
 
-// ĞÔ±ğ
+// æ€§åˆ«
 enum member_gender
 {
 	GENDER_MALE = 0,
@@ -120,7 +122,7 @@ enum member_gender
 };
 
 
-//tokenµÄÀàĞÍ
+//tokençš„ç±»å‹
 enum TokenType {
 	TokenTypeBegin			= 0,
 	TokenTypeGetAccount		= 1,
@@ -131,30 +133,34 @@ enum TokenType {
 };
 
 
-// Éè±¸ÀàĞÍ
+// è®¾å¤‡ç±»å‹
 enum DM_DEVICE_CATEGORY
 {
-	DM_DEVICE_CATEGORY_AIR_CONDITIONER 		= 1,	// ¿Õµ÷
-	DM_DEVICE_CATEGORY_WINDOW_CURTAINS 		= 2,	// ´°Á±
-	DM_DEVICE_CATEGORY_TELEVISION			= 3,	// µçÊÓ
-	DM_DEVICE_CATEGORY_ELECTRIC_COOKER		= 4,	// µç·¹ìÒ
-	DM_DEVICE_CATEGORY_LAMP					= 5,	// µÆ
-	DM_DEVICE_CATEGORY_ELECTRONIC_BALANCE	= 6,	// µç×Ó³Ó
-	DM_DEVICE_CATEGORY_CAMERA				= 7,	// ÉãÏñÍ·
-	DM_DEVICE_CATEGORY_INTELLIGENT_SWITCH	= 8,	// ÖÇÄÜ¿ª¹Ø
-	DM_DEVICE_CATEGORY_AIR_QUALITY_DETECTOR	= 9,	// ¿ÕÆøÖÊÁ¿¼ì²âÒÇ
-	DM_DEVICE_CATEGORY_HYGROTHERMOGRAPH		= 10,	// ÎÂÊª¶È¼Æ
-	DM_DEVICE_CATEGORY_ROUTER				= 11,	// Â·ÓÉÆ÷
-	DM_DEVICE_CATEGORY_DOOR_SENSOR			= 12,	// ÃÅ´°´«¸ĞÆ÷
-	DM_DEVICE_CATEGORY_BODY_SENSOR			= 13,	// ÈËÌå´«¸ĞÆ÷
-	DM_DEVICE_CATEGORY_VISUAL_INTERCOM		= 14,	// ¿ÉÊÓ¶Ô½²»ú
+	DM_DEVICE_CATEGORY_MASTER_SWITCH		= -1,	// æ€»å¼€å…³
+	DM_DEVICE_CATEGORY_HOUSE_ALL_LIGHT		= -2,	// å…¨å±‹ç¯
+
+	DM_DEVICE_CATEGORY_AIR_CONDITIONER 		= 1,	// ç©ºè°ƒ
+	DM_DEVICE_CATEGORY_WINDOW_CURTAINS 		= 2,	// çª—å¸˜
+	DM_DEVICE_CATEGORY_TELEVISION			= 3,	// ç”µè§†
+	DM_DEVICE_CATEGORY_ELECTRIC_COOKER		= 4,	// ç”µé¥­ç…²
+	DM_DEVICE_CATEGORY_LAMP					= 5,	// ç¯
+	DM_DEVICE_CATEGORY_ELECTRONIC_BALANCE	= 6,	// ç”µå­ç§¤
+	DM_DEVICE_CATEGORY_CAMERA				= 7,	// æ‘„åƒå¤´
+	DM_DEVICE_CATEGORY_INTELLIGENT_SWITCH	= 8,	// æ™ºèƒ½å¼€å…³
+	DM_DEVICE_CATEGORY_AIR_QUALITY_DETECTOR	= 9,	// ç©ºæ°”è´¨é‡æ£€æµ‹ä»ª
+	DM_DEVICE_CATEGORY_HYGROTHERMOGRAPH		= 10,	// æ¸©æ¹¿åº¦è®¡
+	DM_DEVICE_CATEGORY_ROUTER				= 11,	// è·¯ç”±å™¨
+	DM_DEVICE_CATEGORY_DOOR_SENSOR			= 12,	// é—¨çª—ä¼ æ„Ÿå™¨
+	DM_DEVICE_CATEGORY_BODY_SENSOR			= 13,	// äººä½“ä¼ æ„Ÿå™¨
+	DM_DEVICE_CATEGORY_VISUAL_INTERCOM		= 14,	// å¯è§†å¯¹è®²æœº
+	DM_DEVICE_CATEGORY_INTELLIGENT_SPEAKER	= 15,	// å¯è§†å¯¹è®²æœº
 
 	DM_DEVICE_CATEGORY_END
 };
 
 
 
-// Éè±¸ÓĞĞ§ÎŞĞ§
+// è®¾å¤‡æœ‰æ•ˆæ— æ•ˆ
 enum DM_DEVICE_STATE
 {
 	DM_DEVICE_STATE_ENABLE = 0,
@@ -165,7 +171,7 @@ enum DM_DEVICE_STATE
 
 
 
-// ¸æ¾¯´¦Àí×´Ì¬
+// å‘Šè­¦å¤„ç†çŠ¶æ€
 enum DM_DEVICE_ALERT_STATUS
 {
 	DM_DEVICE_ALERT_STATUS_INITIAL = 0,
@@ -177,7 +183,7 @@ enum DM_DEVICE_ALERT_STATUS
 
 
 
-// Éè±¸×´Ì¬ÀàĞÍ
+// è®¾å¤‡çŠ¶æ€ç±»å‹
 enum DM_DEVICE_STATUS_TYPE
 {
 	DM_DEVICE_STATUS_TYPE_TEST = 1,
@@ -187,7 +193,7 @@ enum DM_DEVICE_STATUS_TYPE
 
 
 
-// Éè±¸¸æ¾¯ÀàĞÍ
+// è®¾å¤‡å‘Šè­¦ç±»å‹
 enum DM_DEVICE_ALERT_TYPE
 {
 	DM_DEVICE_ALERT_TYPE_TEST = 1,
@@ -197,24 +203,24 @@ enum DM_DEVICE_ALERT_TYPE
 
 
 
-//---------------------------  È«¾Ö½á¹¹Ìå-------------------------------
+//---------------------------  å…¨å±€ç»“æ„ä½“-------------------------------
 
 
-//ÏµÍ³ÅäÖÃ½á¹¹Ìå
+//ç³»ç»Ÿé…ç½®ç»“æ„ä½“
 typedef struct StSysInfo
 {
-	std::string _id;                             //Ô­Ê¼ID
-	std::string _new_id;                         //ĞÂID
-	std::string _log_id;                         //ÈÕÖ¾ID
-	unsigned int _pid;                           //½ø³ÌID
-	std::string _ip;                             //IPµØÖ·
-	std::string _ip_out;                         //¹«ÍøIPµØÖ·
-	unsigned short _port;                        //¶ÀÁ¢¶Ë¿Ú
-	unsigned short _worker_port;                 //×¢²á¶Ë¿Ú
-	unsigned short _thr_num;                     //¹¤×÷Ïß³Ì¸öÊı
-	unsigned int _max_queue_size;                //ÇëÇó¶ÓÁĞ×î´ó³ß´ç
-	unsigned int _rate_limit;                    //ËÙÂÊÏŞÖÆ
-	std::string _TZ;                             //Ê±Çø
+	std::string _id;                             //åŸå§‹ID
+	std::string _new_id;                         //æ–°ID
+	std::string _log_id;                         //æ—¥å¿—ID
+	unsigned int _pid;                           //è¿›ç¨‹ID
+	std::string _ip;                             //IPåœ°å€
+	std::string _ip_out;                         //å…¬ç½‘IPåœ°å€
+	unsigned short _port;                        //ç‹¬ç«‹ç«¯å£
+	unsigned short _worker_port;                 //æ³¨å†Œç«¯å£
+	unsigned short _thr_num;                     //å·¥ä½œçº¿ç¨‹ä¸ªæ•°
+	unsigned int _max_queue_size;                //è¯·æ±‚é˜Ÿåˆ—æœ€å¤§å°ºå¯¸
+	unsigned int _rate_limit;                    //é€Ÿç‡é™åˆ¶
+	std::string _TZ;                             //æ—¶åŒº
 	
 	StSysInfo():_id(""), _new_id(""), _ip(""), _port(0), _worker_port(0),
 		_thr_num(0), _max_queue_size(0), _rate_limit(0), _TZ("")
@@ -229,9 +235,9 @@ typedef struct StSysInfo
 
 typedef struct StSvr
 {
-   	std::string _ip;                   //·şÎñIP
-   	std::string _ip_out;               //¹«ÍøIPµØÖ·
-	unsigned short _port;          	   //·şÎñ¶Ë¿Ú
+   	std::string _ip;                   //æœåŠ¡IP
+   	std::string _ip_out;               //å…¬ç½‘IPåœ°å€
+	unsigned short _port;          	   //æœåŠ¡ç«¯å£
 
 	StSvr(): _ip(""), _ip_out(""), _port(0)
 	{
@@ -243,7 +249,7 @@ typedef struct StSvr
 //----------------------------------------------
 
 
-//mysql ·ÃÎÊÅäÖÃĞÅÏ¢½á¹¹Ìå
+//mysql è®¿é—®é…ç½®ä¿¡æ¯ç»“æ„ä½“
 typedef struct StMysql_Access
 {
 	std::string _ip;
@@ -262,7 +268,7 @@ typedef struct StMysql_Access
 
 
 
-//Mongo ·ÃÎÊÅäÖÃĞÅÏ¢½á¹¹Ìå
+//Mongo è®¿é—®é…ç½®ä¿¡æ¯ç»“æ„ä½“
 typedef struct StMongo_Access
 {
 	std::string _ip;
@@ -280,14 +286,14 @@ typedef struct StMongo_Access
 
 
 
-//Redis ·ÃÎÊÅäÖÃĞÅÏ¢½á¹¹Ìå
+//Redis è®¿é—®é…ç½®ä¿¡æ¯ç»“æ„ä½“
 typedef struct StRedis_Access
 {
 	std::string _ip;
 	unsigned short _port;
 	std::string _auth;
-	
-	StRedis_Access(): _ip(""), _port(0), _auth("")
+	unsigned int _num;
+	StRedis_Access(): _ip(""), _port(0), _auth(""),_num(5)
 	{
 	}
 	
@@ -299,25 +305,25 @@ typedef struct StRedis_Access
 
 
 /*
-¿Í»§¶ËĞÅÏ¢½á¹¹Ìå
-4GB ÄÚ´æ×î¶à¿ÉÒÔ´æ´¢4000W¿Í»§¶Ë¼ÇÂ¼(Ã¿¸ö¿Í»§¶Ë100×Ö½Ú)
-4GB ÄÚ´æ¹ÜÀí2000W ¿Í»§¶Ë¼ÇÂ¼²¿Êğ
+å®¢æˆ·ç«¯ä¿¡æ¯ç»“æ„ä½“
+4GB å†…å­˜æœ€å¤šå¯ä»¥å­˜å‚¨4000Wå®¢æˆ·ç«¯è®°å½•(æ¯ä¸ªå®¢æˆ·ç«¯100å­—èŠ‚)
+4GB å†…å­˜ç®¡ç†2000W å®¢æˆ·ç«¯è®°å½•éƒ¨ç½²
 */
 typedef struct StClient
 {   
-	unsigned long long _id;            //¿Í»§¶ËID:  ÓÃ»§ID£¬Router ID
-	std::string _type;                 //¿Í»§¶ËÀàĞÍ
-	std::string _session_id;           //»á»°ID
+	unsigned long long _id;            //å®¢æˆ·ç«¯ID:  ç”¨æˆ·IDï¼ŒRouter ID
+	std::string _type;                 //å®¢æˆ·ç«¯ç±»å‹
+	std::string _session_id;           //ä¼šè¯ID
 
-	std::string _uuid;                 //°²È«Í¨µÀID 
-	std::string _key;                  //°²È«Í¨µÀÃØÔ¿
+	std::string _uuid;                 //å®‰å…¨é€šé“ID 
+	std::string _key;                  //å®‰å…¨é€šé“ç§˜é’¥
 
-	int _fd;                           //¸Ã¿Í»§¶Ëfd
-	std::string _ip;                   //¿Í»§¶ËµÄIP
-	unsigned short _port;              //¿Í»§¶Ë¶Ë¿Ú
+	int _fd;                           //è¯¥å®¢æˆ·ç«¯fd
+	std::string _ip;                   //å®¢æˆ·ç«¯çš„IP
+	unsigned short _port;              //å®¢æˆ·ç«¯ç«¯å£
 	
-	unsigned long long _stmp_create;    //¸Ã¿Í»§¶Ë´´½¨Ê±¼ä´Á
-	std::string _geography;             //µØÀíÎ»ÖÃ
+	unsigned long long _stmp_create;    //è¯¥å®¢æˆ·ç«¯åˆ›å»ºæ—¶é—´æˆ³
+	std::string _geography;             //åœ°ç†ä½ç½®
 	
 	StClient(): _id(0), _type(TT_UNKNOWN), _session_id(""), _uuid(""), _key(""), _fd(-1), _ip(""), _port(0), 
 		_stmp_create(0), _geography("")

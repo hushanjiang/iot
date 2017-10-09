@@ -33,6 +33,7 @@ class Msg_Oper
 public:
 	
 	static int send_msg(int fd, const std::string &method, const unsigned int req_id, const std::string &msg_tag,  
+		const std::string &msg_encry, const std::string &msg_uuid, const std::string &session_id,
 		const int code, const std::string &msg, const std::string &body="", bool is_object = false);
 
 	static int send_msg(int fd, const std::string &buf);

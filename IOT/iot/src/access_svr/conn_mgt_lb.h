@@ -37,22 +37,21 @@ public:
 
 	virtual ~Conn_Mgt_LB();
 
-	int init(std::vector<StSvr> *svrs, Event_Handler *handler=NULL, bool asyn=false, bool do_register=false);
-
+	int init(std::vector<StSvr> *svrs, Event_Handler *handler=NULL, bool asyn=false, const std::string &svr_type=ST_BUSINESS);
+	
 	void refresh(std::vector<StSvr> *svrs);
 
 	virtual void check();
-	
-	virtual void check_conn();
 
-	virtual void check_hb();
+	virtual void check_conn();
+	
+	virtual void check_mdp_conn();
+
+	virtual void check_lb_conn();
 
 	bool get_conn(Conn_Ptr &conn);
 
-	bool get_conn(const std::string &id, Conn_Ptr &conn);	
-
-public:
-	bool _out_ip;
+	bool get_conn(const std::string &id, Conn_Ptr &conn);
 	
 private:
 	Thread_Mutex _mutex;
@@ -60,8 +59,10 @@ private:
 	unsigned int _index;
 
 	Event_Handler *_handler;
-	bool _asyn;          //是否异步
-	bool _do_register;   //是否需要注册和HB
+	bool _asyn;          //鏄惁寮傛
+	//bool _do_register;   //鏄惁闇�瑕佹敞鍐屽拰HB
+	std::string _svr_type;
+	
 	
 };
 
